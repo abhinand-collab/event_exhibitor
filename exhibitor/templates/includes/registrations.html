@@ -1,0 +1,439 @@
+ <!-- Registrations Section -->
+            <div class="registrations-section animate-fade-in">
+                <div class="registrations-header">
+                    <h5>Registrations</h5>
+                    <button class="btn btn-export" id="exportBtn">
+                        <i class="fas fa-file-excel me-2"></i>Export to Excel
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-section">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Keyword</label>
+                            <input type="text" class="form-control" placeholder="Search..." id="searchKeyword">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Status</label>
+                            <select class="form-select select2-filter" id="filterStatus" style="width: 100%;">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="invited">Invited</option>
+                                <option value="confirmed">Confirmed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Tickets</label>
+                            <select class="form-select select2-filter" id="filterTickets" style="width: 100%;">
+                                <option value="">All Tickets</option>
+                                <option value="VIP">VIP Pass</option>
+                                <option value="exhibitor">Exhibitor Pass</option>
+                                <option value="visitor">Visitor Pass</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulk Actions Bar -->
+                <div class="bulk-actions-bar" id="bulkActionsBar">
+                    <div class="bulk-actions-left">
+                        <i class="fas fa-check-circle text-primary me-2"></i>
+                        <span><strong id="selectedCount">0</strong> items selected</span>
+                    </div>
+                    <div class="bulk-actions-right">
+                        <button class="btn btn-bulk btn-primary" id="bulkSendInvites">
+                            <i class="fas fa-paper-plane me-1"></i>Send Invites
+                        </button>
+                        <button class="btn btn-bulk btn-success" id="bulkActivate">
+                            <i class="fas fa-check me-1"></i>Activate
+                        </button>
+                        <button class="btn btn-bulk btn-secondary" id="bulkDeactivate">
+                            <i class="fas fa-pause me-1"></i>Deactivate
+                        </button>
+                        <button class="btn btn-bulk btn-info" id="bulkExport">
+                            <i class="fas fa-download me-1"></i>Export Selected
+                        </button>
+                        <button class="btn btn-bulk btn-danger" id="bulkDelete">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </button>
+                        <button class="btn btn-bulk btn-dark" id="bulkClear">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover" id="registrationsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox" class="table-checkbox" id="selectAll"></th>
+                                <th>NAME</th>
+                                <th>JOB TITLE</th>
+                                <th>SOURCE</th>
+                                <th>TICKET CLASS</th>
+                                <th>TICKET ID</th>
+                                <th>COMPANY NAME</th>
+                                <th>DIGITAL BADGE ISSUE</th>
+                                <th>ONSITE BADGE PRINTED</th>
+                                <th>STATUS</th>
+                                <th>ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    {% for reg in registrations %}
+    <tr>
+        <!-- Checkbox -->
+        <td>
+            <input type="checkbox" class="table-checkbox row-checkbox">
+        </td>
+
+        <!-- Name -->
+        <td>
+            <div class="user-info">
+                <span class="name">{{ reg.first_name }} {{ reg.last_name }}</span>
+                <span class="email">{{ reg.email }}</span>
+            </div>
+        </td>
+
+        <!-- Job Title -->
+        <td>{{ reg.job_title }}</td>
+
+        <!-- Source -->
+        <td>{{ reg.source }}</td>
+
+        <!-- Ticket Class -->
+        <td>
+            {% if reg.badge %}
+                {{ reg.badge.ticket_class }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+
+        <!-- Ticket ID -->
+        <td style="max-width:180px; word-break: break-word;">
+            {% if reg.badge %}
+                {{ reg.badge.ticket_id }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+
+        <!-- Company -->
+        <td>{{ reg.company_name }}</td>
+
+        <!-- Digital Badge -->
+        <td>
+            {% if reg.digital_badge_issued %}
+                <span class="label-yes">Yes</span>
+            {% else %}
+                <span class="label-no">No</span>
+            {% endif %}
+        </td>
+
+        <!-- Onsite Badge -->
+        <td>
+            {% if reg.onsite_badge_printed %}
+                <span class="label-yes">Yes</span>
+            {% else %}
+                <span class="label-no">No</span>
+            {% endif %}
+        </td>
+
+        <!-- Status -->
+        <td>
+            <span class="status-badge {{ reg.status|lower }}">
+                {{ reg.get_status_display }}
+            </span>
+        </td>
+
+        <!-- Actions -->
+        <td>
+            <div class="action-buttons">
+                <button class="btn-action-table edit">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-action-table email">
+                    <i class="fas fa-envelope"></i>
+                </button>
+                <button class="btn-action-table download">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="btn-action-table print">
+                    <i class="fas fa-print"></i>
+                </button>
+                <button class="btn-action-table delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+<div class="pagination-wrapper" style="margin-top: 20px; padding: 15px 0; border-top: 1px solid #e5e7eb;">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <div class="pagination-info" style="color: #6b7280; font-size: 14px;">
+                Showing {{ registrations.start_index }} to {{ registrations.end_index }} of {{ registrations.paginator.count }} entries
+            </div>
+        </div>
+        <div class="col-md-6">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-end" style="margin: 0; gap: 5px;">
+                    <!-- Previous Page -->
+                    {% if registrations.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" style="border-radius: 6px; padding: 8px 14px; color: #1a56db;">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ registrations.previous_page_number }}" style="border-radius: 6px; padding: 8px 14px; color: #1a56db;">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link" style="border-radius: 6px; padding: 8px 14px; background-color: #f3f4f6; color: #9ca3af;">
+                                <i class="fas fa-angle-double-left"></i>
+                            </span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link" style="border-radius: 6px; padding: 8px 14px; background-color: #f3f4f6; color: #9ca3af;">
+                                <i class="fas fa-angle-left"></i>
+                            </span>
+                        </li>
+                    {% endif %}
+
+                    <!-- Page Numbers with Ellipsis -->
+                    {% for page_num in registrations.paginator.page_range %}
+                        {% if page_num == registrations.number %}
+                            <li class="page-item active">
+                                <span class="page-link" style="border-radius: 6px; padding: 8px 14px; background-color: #1a56db; border-color: #1a56db; color: white;">
+                                    {{ page_num }}
+                                </span>
+                            </li>
+                        {% elif page_num > registrations.number|add:'-3' and page_num < registrations.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_num }}" style="border-radius: 6px; padding: 8px 14px; color: #1a56db;">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% elif page_num == 1 or page_num == registrations.paginator.num_pages %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_num }}" style="border-radius: 6px; padding: 8px 14px; color: #1a56db;">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% elif page_num == registrations.number|add:'-4' or page_num == registrations.number|add:'4' %}
+                            <li class="page-item disabled">
+                                <span class="page-link" style="border-radius: 6px; padding: 8px 14px; background-color: #f3f4f6; color: #9ca3af;">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Next Page -->
+                    {% if registrations.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ registrations.next_page_number }}" style="border-radius: 6px; padding: 8px 14px; color: #1a56db;">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ registrations.paginator.num_pages }}" style="border-radius: 6px; padding: 8px 14px; color: #1a56db;">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link" style="border-radius: 6px; padding: 8px 14px; background-color: #f3f4f6; color: #9ca3af;">
+                                <i class="fas fa-angle-right"></i>
+                            </span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link" style="border-radius: 6px; padding: 8px 14px; background-color: #f3f4f6; color: #9ca3af;">
+                                <i class="fas fa-angle-double-right"></i>
+                            </span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Optional: Page Size Selector -->
+<div class="page-size-selector" style="margin-top: 10px; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+    <label style="color: #6b7280; font-size: 14px; margin: 0;">Show</label>
+    <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto; border-radius: 6px;">
+        <option value="10" {% if request.GET.page_size == '10' %}selected{% endif %}>10</option>
+        <option value="25" {% if request.GET.page_size == '25' %}selected{% endif %}>25</option>
+        <option value="50" {% if request.GET.page_size == '50' %}selected{% endif %}>50</option>
+        <option value="100" {% if request.GET.page_size == '100' %}selected{% endif %}>100</option>
+    </select>
+    <span style="color: #6b7280; font-size: 14px;">entries per page</span>
+</div>
+            </div>
+
+<style>
+    /* Pagination Styles */
+.pagination {
+    gap: 5px;
+}
+
+.page-item .page-link {
+    border-radius: 6px;
+    padding: 8px 14px;
+    color: #1a56db;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.page-item .page-link:hover {
+    background-color: #1a56db;
+    color: white;
+    border-color: #1a56db;
+    transform: translateY(-1px);
+}
+
+.page-item.active .page-link {
+    background-color: #1a56db;
+    border-color: #1a56db;
+    color: white;
+    box-shadow: 0 2px 4px rgba(26, 86, 219, 0.2);
+}
+
+.page-item.disabled .page-link {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.page-size-selector select {
+    border-color: #e5e7eb;
+    cursor: pointer;
+}
+
+.page-size-selector select:focus {
+    border-color: #1a56db;
+    box-shadow: 0 0 0 2px rgba(26, 86, 219, 0.1);
+}
+</style>
+
+<script>
+// Page size change handler
+document.getElementById('pageSizeSelect')?.addEventListener('change', function() {
+    const pageSize = this.value;
+    const currentUrl = new URL(window.location.href);
+    
+    // Get current filter values
+    const keyword = document.getElementById('searchKeyword')?.value;
+    const status = document.getElementById('filterStatus')?.value;
+    const tickets = document.getElementById('filterTickets')?.value;
+    
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.set('page_size', pageSize);
+    params.set('page', 1); // Reset to first page
+    
+    if (keyword) params.set('search', keyword);
+    if (status) params.set('status', status);
+    if (tickets) params.set('ticket_type', tickets);
+    
+    // Navigate to new URL
+    window.location.href = `${currentUrl.pathname}?${params.toString()}`;
+});
+
+// Preserve filters when clicking on pagination links
+document.querySelectorAll('.pagination a').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const url = new URL(this.href);
+        
+        // Get current filter values
+        const keyword = document.getElementById('searchKeyword')?.value;
+        const status = document.getElementById('filterStatus')?.value;
+        const tickets = document.getElementById('filterTickets')?.value;
+        
+        // Get the page number from the clicked link
+        const pageMatch = this.href.match(/[?&]page=(\d+)/);
+        const page = pageMatch ? pageMatch[1] : 1;
+        
+        // Build query parameters
+        const params = new URLSearchParams();
+        params.set('page', page);
+        params.set('page_size', document.getElementById('pageSizeSelect')?.value || 10);
+        
+        if (keyword) params.set('search', keyword);
+        if (status) params.set('status', status);
+        if (tickets) params.set('ticket_type', tickets);
+        
+        // Navigate to new URL
+        window.location.href = `${window.location.pathname}?${params.toString()}`;
+    });
+});
+
+// Set the page size select value based on current URL parameter
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageSize = urlParams.get('page_size');
+    if (pageSize) {
+        const select = document.getElementById('pageSizeSelect');
+        if (select && select.querySelector(`option[value="${pageSize}"]`)) {
+            select.value = pageSize;
+        }
+    }
+    
+    // Set filter values from URL parameters
+    const searchParam = urlParams.get('search');
+    const statusParam = urlParams.get('status');
+    const ticketParam = urlParams.get('ticket_type');
+    
+    if (searchParam) document.getElementById('searchKeyword').value = searchParam;
+    if (statusParam) document.getElementById('filterStatus').value = statusParam;
+    if (ticketParam) document.getElementById('filterTickets').value = ticketParam;
+});
+
+// Filter change handlers - submit form when filters change
+document.getElementById('searchKeyword')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        applyFilters();
+    }
+});
+
+document.getElementById('filterStatus')?.addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('filterTickets')?.addEventListener('change', function() {
+    applyFilters();
+});
+
+function applyFilters() {
+    const keyword = document.getElementById('searchKeyword')?.value;
+    const status = document.getElementById('filterStatus')?.value;
+    const tickets = document.getElementById('filterTickets')?.value;
+    const pageSize = document.getElementById('pageSizeSelect')?.value || 10;
+    
+    const params = new URLSearchParams();
+    params.set('page', 1);
+    params.set('page_size', pageSize);
+    
+    if (keyword) params.set('search', keyword);
+    if (status) params.set('status', status);
+    if (tickets) params.set('ticket_type', tickets);
+    
+    window.location.href = `${window.location.pathname}?${params.toString()}`;
+}
+</script>

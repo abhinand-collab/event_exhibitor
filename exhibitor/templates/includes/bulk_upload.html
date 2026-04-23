@@ -1,0 +1,902 @@
+{# ============================================================ #}
+{#   BULK UPLOAD MODALS + STYLES + SCRIPTS                     #}
+{#   Flow:  Upload → Map columns → Preview (paginated) → Save  #}
+{# ============================================================ #}
+
+
+{# ============================================================ #}
+{# MODAL 1 — File picker                                        #}
+{# ============================================================ #}
+<div class="modal fade" id="bulkUploadModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title">
+          <i class="fas fa-file-upload me-2" style="color:#e74c3c;"></i>Bulk Upload
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body" style="padding:25px;">
+        <div class="text-center mb-4">
+          <div style="width:80px;height:80px;background:rgba(231,76,60,.1);border-radius:50%;
+                      display:inline-flex;align-items:center;justify-content:center;margin-bottom:15px;">
+            <i class="fas fa-cloud-upload-alt" style="font-size:36px;color:#e74c3c;"></i>
+          </div>
+          <p class="text-muted">Upload your Excel file with badge details</p>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Select File <span class="text-danger">*</span></label>
+          <input type="file" class="form-control" id="bulkFile" accept=".xlsx,.xls,.csv">
+          <small class="text-muted">Supported: .xlsx, .xls, .csv — Max 5 MB</small>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+          <span class="text-muted"><i class="fas fa-download me-2"></i>Need the template?</span>
+          <button class="btn btn-sm btn-outline-danger">
+            <i class="fas fa-file-download me-1"></i>Download Template
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn px-4" id="uploadBulkBtn" style="background:#e74c3c;color:white;">
+          <i class="fas fa-upload me-2"></i>Upload &amp; Process
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{# ============================================================ #}
+{# MODAL 2 — Column mapping                                     #}
+{# ============================================================ #}
+<div class="modal fade" id="fieldMappingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Map columns to system fields</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="mappingContainer"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="confirmMappingBtn" class="btn btn-primary">Continue</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{# ============================================================ #}
+{# MODAL 3 — Preview table (paginated)                          #}
+{# ============================================================ #}
+<div class="modal fade" id="bulkPreviewModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:95vw;">
+    <div class="modal-content" style="border-radius:10px;overflow:hidden;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15);">
+
+      {# ── Header ── #}
+      <div class="modal-header" style="background:#fff;border-bottom:3px solid #1a56db;padding:16px 24px;align-items:flex-start;">
+        <div style="flex:1;">
+          <div class="d-flex align-items-center gap-3 mb-1">
+            <span style="font-size:18px;font-weight:700;color:#111;">Preview</span>
+            <input type="text" class="form-control form-control-sm" placeholder="Batch name (e.g. Day 1 Attendees)"
+                   style="max-width:280px;border-radius:6px;border:1px solid #ddd;font-size:14px;">
+          </div>
+          <small class="text-muted" style="font-size:12px;">Name this import batch for reference.</small>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      {# ── Tabs ── #}
+      <div style="background:#fff;border-bottom:1px solid #e5e7eb;padding:0 24px;">
+        <ul style="list-style:none;margin:0;padding:0;display:flex;gap:0;">
+          <li><button class="bulk-preview-tab active" data-bptab="all">
+            All <span class="bpt-badge" id="tab-count-all">0</span>
+          </button></li>
+          <li><button class="bulk-preview-tab" data-bptab="valid">
+            Valid <span class="bpt-badge bpt-valid" id="tab-count-valid">0</span>
+          </button></li>
+          <li><button class="bulk-preview-tab" data-bptab="invalid">
+            Invalid <span class="bpt-badge bpt-invalid" id="tab-count-invalid">0</span>
+          </button></li>
+        </ul>
+      </div>
+
+      {# ── Table ── #}
+      <div class="modal-body" style="padding:0;background:#fff;">
+        <div style="overflow-x:auto;max-height:360px;overflow-y:auto;">
+          <table style="width:100%;font-size:13.5px;border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f3f4f6;position:sticky;top:0;z-index:2;">
+                <th class="bpt-th">ROW</th>
+                <th class="bpt-th">FIRST NAME</th>
+                <th class="bpt-th">LAST NAME</th>
+                <th class="bpt-th">EMAIL</th>
+                <th class="bpt-th">MOBILE</th>
+                <th class="bpt-th">COUNTRY</th>
+                <th class="bpt-th">NATIONALITY</th>
+                <th class="bpt-th">COMPANY</th>
+                <th class="bpt-th">JOB TITLE</th>
+                <th class="bpt-th">TICKET TYPE</th>
+                <th class="bpt-th">TERMS</th>
+                <th class="bpt-th">DATA SHARING</th>
+                <th class="bpt-th">MARKETING</th>
+                <th class="bpt-th">STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="previewTableBody"></tbody>
+          </table>
+        </div>
+
+        {# ── Pagination bar — sits below the scrollable table, inside modal-body ── #}
+        <div id="paginationBar"
+             style="display:flex;align-items:center;justify-content:space-between;
+                    padding:10px 16px;border-top:1px solid #e5e7eb;background:#fafafa;">
+
+          {# Left: "Showing X–Y of Z rows" #}
+          <span id="paginationInfo" style="font-size:13px;color:#6b7280;"></span>
+
+          {# Centre: prev / page numbers / next #}
+          <div id="paginationBtns" style="display:flex;gap:4px;align-items:center;"></div>
+
+          {# Right: rows-per-page selector #}
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#6b7280;">
+            <span>Rows per page</span>
+            <select id="pageSizeSelect"
+                    style="border:1px solid #d1d5db;border-radius:6px;padding:4px 8px;font-size:13px;">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      {# ── Footer ── #}
+      <div class="modal-footer border-top"
+           style="background:#fff;padding:14px 24px;justify-content:space-between;">
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn px-4" id="backToUploadBtn"
+                  style="background:#fff;color:#333;border:1px solid #ddd;">
+            <i class="fas fa-arrow-left me-1"></i> Back
+          </button>
+        </div>
+        <button type="button" class="btn px-5" id="submitBulkBtn"
+                style="background:#1a56db;color:white;border:none;">
+          Submit
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{# ============================================================ #}
+{# STYLES                                                       #}
+{# ============================================================ #}
+<style>
+/* ── Tab bar ── */
+.bulk-preview-tab {
+  background:none; border:none; border-bottom:3px solid transparent;
+  padding:12px 18px; font-size:14px; font-weight:500; color:#6b7280;
+  cursor:pointer; display:inline-flex; align-items:center; gap:7px;
+  transition:color .15s, border-color .15s;
+}
+.bulk-preview-tab:hover  { color:#1a56db; }
+.bulk-preview-tab.active { color:#1a56db; border-bottom-color:#1a56db; }
+
+/* ── Tab badges ── */
+.bpt-badge   { display:inline-flex; align-items:center; justify-content:center;
+               min-width:22px; height:20px; padding:0 6px; border-radius:10px;
+               font-size:11px; font-weight:700; background:#e5e7eb; color:#374151; }
+.bpt-valid   { background:#d1fae5; color:#065f46; }
+.bpt-invalid { background:#fee2e2; color:#991b1b; }
+
+/* ── Table ── */
+.bpt-th { padding:11px 14px; color:#555; font-weight:600; font-size:12px;
+          letter-spacing:.04em; border-bottom:1px solid #e5e7eb; white-space:nowrap; text-align:left; }
+.bpt-td { padding:9px 14px; border-bottom:1px solid #f0f0f0; vertical-align:middle; white-space:nowrap; }
+
+/* ── Row states ── */
+.bpt-row:hover .bpt-td              { background:#f9fafb; }
+.bpt-row-invalid .bpt-td:first-child { border-left:3px solid #ef4444; }
+.bpt-row-invalid .bpt-td            { background:#fff8f8; }
+.bpt-row-invalid:hover .bpt-td      { background:#fff0f0; }
+
+/* ── Inputs ── */
+.bpt-input {
+  border:1px solid #d1d5db; border-radius:5px; padding:5px 9px;
+  font-size:13px; width:100%; min-width:100px; outline:none;
+  transition:border-color .15s; background:#fff;
+}
+.bpt-input:focus { border-color:#1a56db; box-shadow:0 0 0 2px rgba(26,86,219,.08); }
+.bpt-input-err   { border-color:#ef4444; background:#fff5f5; }
+.bpt-error       { font-size:11px; color:#dc2626; margin-top:3px; }
+
+/* ── Status pill ── */
+.bpt-status    { display:inline-flex; align-items:center; gap:4px; padding:3px 10px;
+                 border-radius:12px; font-size:11.5px; font-weight:600; }
+.bpt-s-valid   { background:#d1fae5; color:#065f46; }
+.bpt-s-invalid { background:#fee2e2; color:#991b1b; }
+
+/* ── Pagination buttons ── */
+.pg-btn {
+  min-width:32px; height:32px; padding:0 10px;
+  border:1px solid #d1d5db; border-radius:6px;
+  background:#fff; font-size:13px; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition:background .15s, border-color .15s;
+}
+.pg-btn:hover:not(:disabled) { background:#f3f4f6; border-color:#9ca3af; }
+.pg-btn.active  { background:#1a56db; color:#fff; border-color:#1a56db; font-weight:600; }
+.pg-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+/* ── Field-mapping modal ── */
+.fm-row   { display:flex; align-items:center; justify-content:space-between;
+            padding:10px 0; border-bottom:1px solid #eee; }
+.fm-left  { width:45%; font-size:14px; color:#333; }
+.fm-right { width:55%; display:flex; align-items:center; gap:10px; }
+.fm-select { flex:1; border:1px solid #ddd; border-radius:6px; padding:6px 10px;
+             font-size:14px; background:#fff; }
+.fm-delete { border:none; background:none; color:#e74c3c; cursor:pointer; font-size:14px; }
+.fm-delete:hover { color:#c0392b; }
+</style>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────
+
+function getCsrfToken() {
+  return document.cookie
+    .split("; ")
+    .find(r => r.startsWith("csrftoken"))
+    ?.split("=")[1];
+}
+
+function postJSON(url, data) {
+  return fetch(url, {
+    method : "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
+    body   : JSON.stringify(data),
+  }).then(r => r.json());
+}
+
+function postFormData(url, formData) {
+  return fetch(url, {
+    method : "POST",
+    headers: { "X-CSRFToken": getCsrfToken() },
+    body   : formData,
+  }).then(r => r.json());
+}
+
+// Debounce function to prevent excessive API calls
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const context = this; // ✅ preserve this
+
+    const later = () => {
+      clearTimeout(timeout);
+      func.apply(context, args); // ✅ use correct this
+    };
+
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// PAGINATION STATE
+// ─────────────────────────────────────────────────────────────
+
+const pagination = {
+  currentPage  : 1,
+  pageSize     : 50,
+  totalPages   : 1,
+  totalRecords : 0,
+  validCount   : 0,
+  invalidCount : 0,
+  activeTab    : "all",
+  savedMapping : {},
+  previewData  : null,  // Store full preview data for client-side pagination
+};
+
+// Track edited rows with proper ID mapping
+const editedRows = new Map(); // Use Map for better performance
+
+// ─────────────────────────────────────────────────────────────
+// MODAL NAVIGATION
+// ─────────────────────────────────────────────────────────────
+
+document.getElementById("backToUploadBtn").addEventListener("click", () => {
+  bootstrap.Modal.getInstance(document.getElementById("bulkPreviewModal")).hide();
+  setTimeout(() => new bootstrap.Modal(document.getElementById("bulkUploadModal")).show(), 350);
+});
+
+// ─────────────────────────────────────────────────────────────
+// STEP 1 — File selected → fetch column headers
+// ─────────────────────────────────────────────────────────────
+
+document.getElementById("uploadBulkBtn").addEventListener("click", () => {
+  const file = document.getElementById("bulkFile").files[0];
+  if (!file) return alert("Please select a file first.");
+
+  const fd = new FormData();
+  fd.append("file", file);
+
+  postFormData("/get-columns/", fd).then(data => {
+    renderFieldMapping(data.columns);
+    new bootstrap.Modal(document.getElementById("fieldMappingModal")).show();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// STEP 2 — Render field-mapping UI
+// ─────────────────────────────────────────────────────────────
+
+const SYSTEM_FIELDS = [
+  "first_name", "last_name", "email", "mobile_number",
+  "country", "nationality", "company_name", "job_title",
+  "ticket_type", "accepted_terms",
+];
+
+function toLabel(str) {
+  return str.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function renderFieldMapping(columns) {
+  const container = document.getElementById("mappingContainer");
+  container.innerHTML = "";
+
+  columns.forEach(col => {
+    const row = document.createElement("div");
+    row.className = "fm-row";
+    row.innerHTML = `
+      <div class="fm-left">${col}</div>
+      <div class="fm-right">
+        <select class="fm-select" data-col="${col}">
+          <option value="">— skip —</option>
+          ${SYSTEM_FIELDS.map(f => `<option value="${f}">${toLabel(f)}</option>`).join("")}
+        </select>
+        <button class="fm-delete" title="Clear"><i class="fas fa-trash"></i></button>
+      </div>`;
+    row.querySelector(".fm-delete").onclick = () => row.querySelector("select").value = "";
+    container.appendChild(row);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// STEP 3 — Confirm mapping → load ALL preview data once
+// ─────────────────────────────────────────────────────────────
+
+document.getElementById("confirmMappingBtn").addEventListener("click", async () => {
+  // Save mapping
+  pagination.savedMapping = {};
+  document.querySelectorAll(".fm-select").forEach(sel => {
+    if (sel.value) pagination.savedMapping[sel.dataset.col] = sel.value;
+  });
+
+  // Reset state
+  pagination.currentPage = 1;
+  pagination.pageSize    = parseInt(document.getElementById("pageSizeSelect").value);
+  pagination.activeTab   = "all";
+  editedRows.clear();
+  
+  document.querySelectorAll(".bulk-preview-tab").forEach(b => b.classList.remove("active"));
+  document.querySelector('[data-bptab="all"]').classList.add("active");
+
+  // Load ALL preview data at once (server-side pagination still happens)
+  await loadPreviewData();
+  
+  new bootstrap.Modal(document.getElementById("bulkPreviewModal")).show();
+});
+
+// ─────────────────────────────────────────────────────────────
+// Load preview data from server
+// ─────────────────────────────────────────────────────────────
+
+async function loadPreviewData(page = 1) {
+  const file = document.getElementById("bulkFile").files[0];
+  if (!file) return;
+
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("mapping", JSON.stringify(pagination.savedMapping));
+  fd.append("page", page);
+  fd.append("page_size", pagination.pageSize);
+
+  try {
+    const data = await postFormData("/bulk-upload-preview/", fd);
+    
+    pagination.currentPage  = data.page;
+    pagination.totalPages   = data.total_pages;
+    pagination.totalRecords = data.total;
+    pagination.validCount   = data.valid_count;
+    pagination.invalidCount = data.invalid_count;
+    pagination.previewData  = data.data; // Store current page data
+
+    renderPreviewTable(data.data);
+    updateTabCounts(data.valid_count, data.invalid_count, data.total);
+    renderPagination();
+    applyTabFilter(pagination.activeTab);
+    
+    // Re-apply any saved edits to the newly rendered rows
+    applySavedEditsToCurrentPage();
+  } catch (error) {
+    console.error("Error loading preview:", error);
+    alert("Error loading preview data");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Apply saved edits to current page rows
+// ─────────────────────────────────────────────────────────────
+
+function applySavedEditsToCurrentPage() {
+  const rows = document.querySelectorAll(".bpt-row");
+  rows.forEach(row => {
+    const rowId = parseInt(row.dataset.rowId);
+    if (editedRows.has(rowId)) {
+      const savedData = editedRows.get(rowId);
+      updateRowFromData(row, savedData);
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// Update row UI from saved data
+// ─────────────────────────────────────────────────────────────
+
+function updateRowFromData(row, data) {
+  // Update input values
+  if (data.first_name !== undefined) row.children[1].querySelector("input").value = data.first_name;
+  if (data.last_name !== undefined) row.children[2].querySelector("input").value = data.last_name;
+  if (data.email !== undefined) row.children[3].querySelector("input").value = data.email;
+  if (data.mobile_number !== undefined) row.children[4].querySelector("input").value = data.mobile_number;
+  if (data.country !== undefined) row.children[5].querySelector("input").value = data.country;
+  if (data.nationality !== undefined) row.children[6].querySelector("input").value = data.nationality;
+  if (data.company_name !== undefined) row.children[7].querySelector("input").value = data.company_name;
+  if (data.job_title !== undefined) row.children[8].querySelector("input").value = data.job_title;
+  if (data.ticket_type !== undefined) row.children[9].querySelector("select").value = data.ticket_type;
+  if (data.accepted_terms !== undefined) row.children[10].querySelector("input").checked = data.accepted_terms;
+  if (data.accepted_data_sharing !== undefined) row.children[11].querySelector("input").checked = data.accepted_data_sharing;
+  if (data.accepted_marketing !== undefined) row.children[12].querySelector("input").checked = data.accepted_marketing;
+  
+  // Update status if provided
+  if (data.status) {
+    row.dataset.bpstatus = data.status;
+    const pill = row.children[13].querySelector(".bpt-status");
+    pill.className = `bpt-status ${data.status === 'valid' ? 'bpt-s-valid' : 'bpt-s-invalid'}`;
+    pill.textContent = data.status;
+    row.classList.toggle("bpt-row-invalid", data.status !== 'valid');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Render table rows for current page
+// ─────────────────────────────────────────────────────────────
+
+function updateTabCounts(valid, invalid, total) {
+  document.getElementById("tab-count-all").textContent     = total;
+  document.getElementById("tab-count-valid").textContent   = valid;
+  document.getElementById("tab-count-invalid").textContent = invalid;
+}
+
+function renderPreviewTable(rows) {
+  console.log("renderpreviewtable")
+  const tbody = document.getElementById("previewTableBody");
+  tbody.innerHTML = "";
+
+  rows.forEach(r => {
+    const isInvalid = r.status === "invalid";
+    const err = msg => r.errors.includes(msg) ? `<div class="bpt-error">${msg}</div>` : "";
+    const cls = msg => r.errors.includes(msg) ? "bpt-input-err" : "";
+
+    const tr = document.createElement("tr");
+    tr.className        = `bpt-row ${isInvalid ? "bpt-row-invalid" : ""}`;
+    tr.dataset.bpstatus = r.status;
+    tr.dataset.rowId    = r.id;  // Store row ID for tracking
+
+    tr.innerHTML = `
+      <td class="bpt-td" style="color:#888;font-weight:600;">${r.row}</td>
+      <td class="bpt-td">
+        <input class="bpt-input ${cls('First name required')}" value="${escapeHtml(r.first_name || '')}">
+        ${err('First name required')}
+      </td>
+      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.last_name || '')}"></td>
+      <td class="bpt-td">
+        <input class="bpt-input ${cls('Invalid email')}" value="${escapeHtml(r.email || '')}">
+        ${err('Invalid email')}${err('Email already exists')}
+      </td>
+      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.mobile_number || '')}"></td>
+      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.country || '')}"></td>
+      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.nationality || '')}"></td>
+      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.company_name || '')}"></td>
+      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.job_title || '')}"></td>
+      <td class="bpt-td">
+        <select class="bpt-input bpt-ticket-type">
+          <option value="">Select</option>
+          <option value="VIP"       ${r.ticket_type === "VIP" ? "selected" : ""}>VIP</option>
+          <option value="VISITOR"   ${r.ticket_type === "VISITOR" ? "selected" : ""}>Visitor</option>
+          <option value="EXHIBITOR" ${r.ticket_type === "EXHIBITOR" ? "selected" : ""}>Exhibitor</option>
+        </select>
+        ${err('Ticket type required')}
+      </td>
+      <td class="bpt-td text-center">
+        <input type="checkbox" ${r.accepted_terms ? "checked" : ""}>
+      </td>
+      <td class="bpt-td text-center">
+        <input type="checkbox" ${r.accepted_data_sharing ? "checked" : ""}>
+      </td>
+      <td class="bpt-td text-center">
+        <input type="checkbox" ${r.accepted_marketing ? "checked" : ""}>
+      </td>
+      <td class="bpt-td">
+        <span class="bpt-status ${isInvalid ? 'bpt-s-invalid' : 'bpt-s-valid'}">
+          ${r.status}
+        </span>
+        <button class="btn btn-sm btn-outline-primary check-row-btn ms-1">✔ Check</button>
+      </td>`;
+
+    tbody.appendChild(tr);
+  });
+  
+  // Attach event listeners to new rows
+  attachRowEventListeners();
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// Attach event listeners to rows for auto-save
+// ─────────────────────────────────────────────────────────────
+
+function attachRowEventListeners() {
+  console.log("attachroooow")
+  document.querySelectorAll(".bpt-row").forEach(row => {
+    const inputs = row.querySelectorAll("input, select");
+    inputs.forEach(input => {
+      input.removeEventListener("input", handleRowChange);
+input.addEventListener("input", handleRowChange);
+    });
+  });
+}
+
+const handleRowChange = debounce(async function() {
+  const row = this.closest(".bpt-row");
+  const rowId = parseInt(row.dataset.rowId);
+  
+  const rowData = {
+    id: rowId,
+    first_name: row.children[1].querySelector("input").value.trim(),
+    last_name: row.children[2].querySelector("input").value.trim(),
+    email: row.children[3].querySelector("input").value.trim(),
+    mobile_number: row.children[4].querySelector("input").value.trim(),
+    country: row.children[5].querySelector("input").value.trim(),
+    nationality: row.children[6].querySelector("input").value.trim(),
+    company_name: row.children[7].querySelector("input").value.trim(),
+    job_title: row.children[8].querySelector("input").value.trim(),
+    ticket_type: row.children[9].querySelector("select").value,
+    accepted_terms: row.children[10].querySelector("input").checked,
+    accepted_data_sharing: row.children[11].querySelector("input").checked,
+    accepted_marketing: row.children[12].querySelector("input").checked,
+  };
+  
+  // Store in Map
+  editedRows.set(rowId, rowData);
+  
+  // Auto-save to session (debounced)
+  await syncEditsToServer();
+}, 500); // Wait 500ms after last keystroke
+
+// ─────────────────────────────────────────────────────────────
+// Sync edits to server session
+// ─────────────────────────────────────────────────────────────
+
+async function syncEditsToServer() {
+  if (editedRows.size === 0) return;
+  
+  const updates = Array.from(editedRows.values());
+  
+  try {
+    const result = await postJSON("/bulk-update-session/", { rows: updates });
+    if (!result.success) {
+      console.error("Failed to sync edits:", result.error);
+    } else {
+      // Clear only the synced edits from local Map
+      // Don't clear all, because there might be multiple pages of edits
+      
+    }
+  } catch (error) {
+    console.error("Error syncing edits:", error);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// PAGINATION
+// ─────────────────────────────────────────────────────────────
+
+function renderPagination() {
+  const { currentPage, totalPages, totalRecords, pageSize } = pagination;
+
+  const from = (currentPage - 1) * pageSize + 1;
+  const to   = Math.min(currentPage * pageSize, totalRecords);
+  document.getElementById("paginationInfo").textContent =
+    totalRecords === 0 ? "" : `Showing ${from}–${to} of ${totalRecords} rows`;
+
+  const container = document.getElementById("paginationBtns");
+  container.innerHTML = "";
+
+  if (totalPages <= 1) return;
+
+  // Prev button
+  container.appendChild(makePageBtn("‹", currentPage === 1, () => goToPage(currentPage - 1)));
+
+  // Page numbers
+  buildPageRange(currentPage, totalPages).forEach(p => {
+    if (p === "…") {
+      const dot = document.createElement("span");
+      dot.textContent  = "…";
+      dot.style.cssText = "padding:0 4px;color:#9ca3af;line-height:32px;";
+      container.appendChild(dot);
+    } else {
+      const btn = makePageBtn(p, false, () => goToPage(p));
+      if (p === currentPage) btn.classList.add("active");
+      container.appendChild(btn);
+    }
+  });
+
+  // Next button
+  container.appendChild(makePageBtn("›", currentPage === totalPages, () => goToPage(currentPage + 1)));
+}
+
+function buildPageRange(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+  const pages = new Set([1, total]);
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+    pages.add(i);
+  }
+
+  const sorted = [...pages].sort((a, b) => a - b);
+  const result = [];
+  sorted.forEach((p, i) => {
+    if (i > 0 && p - sorted[i - 1] > 1) result.push("…");
+    result.push(p);
+  });
+  return result;
+}
+
+function makePageBtn(label, disabled, onClick) {
+  const btn       = document.createElement("button");
+  btn.className   = "pg-btn";
+  btn.textContent = label;
+  btn.disabled    = disabled;
+  if (!disabled) btn.addEventListener("click", onClick);
+  return btn;
+}
+
+async function goToPage(page) {
+  if (page < 1 || page > pagination.totalPages) return;
+  
+  // Save current edits before changing page
+  await syncEditsToServer();
+  
+  pagination.currentPage = page;
+  await loadPreviewData(page);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Rows-per-page selector
+// ─────────────────────────────────────────────────────────────
+
+document.getElementById("pageSizeSelect").addEventListener("change", async function () {
+  // Save current edits
+  await syncEditsToServer();
+  
+  pagination.pageSize    = parseInt(this.value);
+  pagination.currentPage = 1;
+  await loadPreviewData(1);
+});
+
+// ─────────────────────────────────────────────────────────────
+// TAB FILTERING
+// ─────────────────────────────────────────────────────────────
+
+function applyTabFilter(tab) {
+  document.querySelectorAll(".bpt-row").forEach(row => {
+    row.style.display = (tab === "all" || row.dataset.bpstatus === tab) ? "" : "none";
+  });
+}
+
+document.querySelectorAll(".bulk-preview-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".bulk-preview-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    pagination.activeTab = btn.dataset.bptab;
+    applyTabFilter(pagination.activeTab);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// ROW VALIDATION (Check button)
+// ─────────────────────────────────────────────────────────────
+
+document.addEventListener("click", async e => {
+  if (!e.target.classList.contains("check-row-btn")) return;
+  console.log("check this function working")
+
+  const tr         = e.target.closest("tr");
+  const rowId      = parseInt(tr.dataset.rowId);
+  const first_name = tr.children[1].querySelector("input").value.trim();
+  const email      = tr.children[3].querySelector("input").value.trim();
+  const termsOk    = tr.children[10].querySelector("input").checked;
+  const ticketType = tr.children[9].querySelector("select").value;
+
+  // Clear previous error markers
+  tr.querySelectorAll(".bpt-error").forEach(el => el.remove());
+  tr.querySelectorAll(".bpt-input").forEach(inp => inp.classList.remove("bpt-input-err"));
+
+  const errors = [];
+  if (!first_name) errors.push("First name required");
+  if (!email || !email.includes("@")) errors.push("Invalid email");
+  if (!ticketType) errors.push("Ticket type required");
+  if (!termsOk) errors.push("Terms must be accepted");
+
+  // Live DB email check
+  if (email && email.includes("@")) {
+    const res = await postJSON("/validate-email/", { email });
+    if (res.exists) errors.push("Email already exists");
+  }
+
+  // Render error markers
+  if (errors.includes("First name required")) {
+    const td = tr.children[1];
+    td.querySelector("input").classList.add("bpt-input-err");
+    td.insertAdjacentHTML("beforeend", `<div class="bpt-error">First name required</div>`);
+  }
+  if (errors.includes("Invalid email") || errors.includes("Email already exists")) {
+    const td = tr.children[3];
+    td.querySelector("input").classList.add("bpt-input-err");
+    errors
+      .filter(e => ["Invalid email", "Email already exists"].includes(e))
+      .forEach(msg => td.insertAdjacentHTML("beforeend", `<div class="bpt-error">${msg}</div>`));
+  }
+  if (errors.includes("Ticket type required")) {
+    const td = tr.children[9];
+    td.querySelector("select").classList.add("bpt-input-err");
+    td.insertAdjacentHTML("beforeend", `<div class="bpt-error">Ticket type required</div>`);
+  }
+  if (errors.includes("Terms must be accepted")) {
+    tr.children[10].insertAdjacentHTML("beforeend", `<div class="bpt-error">Required</div>`);
+  }
+
+  const isValid = errors.length === 0;
+
+  // Update row appearance
+  tr.dataset.bpstatus = isValid ? "valid" : "invalid";
+  tr.classList.toggle("bpt-row-invalid", !isValid);
+
+  // Update status pill (column index 13)
+  const pill       = tr.children[13].querySelector(".bpt-status");
+  pill.className   = `bpt-status ${isValid ? "bpt-s-valid" : "bpt-s-invalid"}`;
+  pill.textContent = isValid ? "valid" : "invalid";
+    console.log(editedRows,"checkworkkkkking")
+  // Save the updated status to edited rows
+  if (editedRows.has(rowId)) {
+    const rowData = editedRows.get(rowId);
+    rowData.status = isValid ? "valid" : "invalid";
+    editedRows.set(rowId, rowData);
+    await syncEditsToServer();
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// SUBMIT BULK UPLOAD
+// ─────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────
+// SUBMIT BULK UPLOAD - Saves ALL valid rows from session
+// ─────────────────────────────────────────────────────────────
+
+document.getElementById("submitBulkBtn").addEventListener("click", async () => {
+  // Sync any pending edits first
+  await syncEditsToServer();
+  
+  // Show loading state
+  const submitBtn = document.getElementById("submitBulkBtn");
+  const originalText = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+  submitBtn.disabled = true;
+  
+  try {
+    // Send empty object - server will read from session
+    const data = await postJSON("/bulk-upload-save/", {});
+    
+    if (!data.success) { 
+      alert("❌ " + (data.errors || "Failed to save records")); 
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+      return; 
+    }
+    const result = await pollTaskStatus(data.task_id);
+    
+    alert(`✅ Successfully created ${result.created} record(s).\n⚠️ Skipped ${result.skipped} record(s).\n📊 Total valid: ${result.total_valid}`);
+    
+    // Close modal and reload page
+    bootstrap.Modal.getInstance(document.getElementById("bulkPreviewModal")).hide();
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+    // location.reload();
+    
+  } catch (error) {
+    console.error("Submit error:", error);
+    alert("Something went wrong. Please try again.");
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// Poll /bulk-task-status/<task_id>/ every 1.5s until done
+// ─────────────────────────────────────────────────────────────
+function pollTaskStatus(taskId, intervalMs = 1500, timeoutMs = 120000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+
+    const interval = setInterval(async () => {
+      try {
+        // Timeout guard
+        if (Date.now() - start > timeoutMs) {
+          clearInterval(interval);
+          reject(new Error("Task timed out. Please check your records manually."));
+          return;
+        }
+
+        const res = await fetch(`/bulk-task-status/${taskId}/`);
+        const json = await res.json();
+
+        if (json.state === "SUCCESS") {
+          clearInterval(interval);
+          resolve(json);
+        } else if (json.state === "FAILURE") {
+          clearInterval(interval);
+          reject(new Error(json.error || "Task failed"));
+        }
+        // PENDING / STARTED → keep polling
+
+      } catch (err) {
+        clearInterval(interval);
+        reject(err);
+      }
+    }, intervalMs);
+  });
+}
+
+
+</script>

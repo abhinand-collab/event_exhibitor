@@ -1,0 +1,386 @@
+<div class="modal-body" style="padding: 25px; max-height: 70vh; overflow-y: auto;">
+    <form method="POST" action="{% url 'create_single_badge' %}" id="createBadgeForm" novalidate>
+        {% csrf_token %}
+        <div id="globalFormError"
+            style="display:none; background:#fdf2f2; border:1px solid #e74c3c; color:#c0392b; padding:12px 16px; border-radius:6px; margin-bottom:16px; font-size:14px;">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span id="globalFormErrorMsg"></span>
+        </div>
+        <div id="globalFormSuccess"
+     style="display:none; background:#f0fdf4; border:1px solid #2ecc71; color:#27ae60; padding:12px 16px; border-radius:6px; margin-bottom:16px; font-size:14px;">
+    
+    <i class="fas fa-check-circle me-2"></i>
+    <span id="globalFormSuccessMsg"></span>
+</div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight: 600; color: #333;">First Name <span
+                        class="text-danger">*</span></label>
+                <input type="text" name="first_name" class="form-control" id="firstName"
+                    placeholder="Enter your firstname" required style="border: 1px solid #ddd; padding: 10px 12px;">
+                <div class="validation-error" id="firstNameError"><i class="fas fa-exclamation-circle"></i><span></span>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight: 600; color: #333;">Last Name <span
+                        class="text-danger">*</span></label>
+                <input type="text" name="last_name" class="form-control" id="lastName" placeholder="Enter your lastname"
+                    required style="border: 1px solid #ddd; padding: 10px 12px;">
+                <div class="validation-error" id="lastNameError"><i class="fas fa-exclamation-circle"></i><span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight: 600; color: #333;">Job Title <span
+                        class="text-danger">*</span></label>
+                <input type="text" name="job_title" class="form-control" id="jobTitle"
+                    placeholder="Enter your job title" required style="border: 1px solid #ddd; padding: 10px 12px;">
+                <div class="validation-error" id="jobTitleError"><i class="fas fa-exclamation-circle"></i><span></span>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight: 600; color: #333;">Company Name <span
+                        class="text-danger">*</span></label>
+                <input type="text" name="company_name" class="form-control" id="companyName"
+                    placeholder="Enter your company name" required style="border: 1px solid #ddd; padding: 10px 12px;">
+                <div class="validation-error" id="companyNameError"><i
+                        class="fas fa-exclamation-circle"></i><span></span></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight: 600; color: #333;">Country of Residence <span
+                        class="text-danger">*</span></label>
+                <select class="form-select select2-modal" name="country_of_residence" id="countryResidence" required
+                    style="width: 100%;">
+                    <option value="">Select Country of Residence</option>
+                    <option value="ae">United Arab Emirates</option>
+                    <option value="sa">Saudi Arabia</option>
+                    <option value="kw">Kuwait</option>
+                    <option value="qa">Qatar</option>
+                    <option value="bh">Bahrain</option>
+                    <option value="om">Oman</option>
+                    <option value="in">India</option>
+                    <option value="pk">Pakistan</option>
+                    <option value="gb">United Kingdom</option>
+                    <option value="us">United States</option>
+                    <option value="eg">Egypt</option>
+                    <option value="jo">Jordan</option>
+                    <option value="lb">Lebanon</option>
+                    <option value="sy">Syria</option>
+                    <option value="iq">Iraq</option>
+                    <option value="ye">Yemen</option>
+                    <option value="ly">Libya</option>
+                    <option value="tn">Tunisia</option>
+                    <option value="ma">Morocco</option>
+                    <option value="dz">Algeria</option>
+                    <option value="sd">Sudan</option>
+                    <option value="bd">Bangladesh</option>
+                    <option value="lk">Sri Lanka</option>
+                    <option value="np">Nepal</option>
+                    <option value="ph">Philippines</option>
+                    <option value="id">Indonesia</option>
+                    <option value="my">Malaysia</option>
+                    <option value="cn">China</option>
+                    <option value="jp">Japan</option>
+                    <option value="kr">South Korea</option>
+                    <option value="de">Germany</option>
+                    <option value="fr">France</option>
+                    <option value="it">Italy</option>
+                    <option value="es">Spain</option>
+                    <option value="nl">Netherlands</option>
+                    <option value="be">Belgium</option>
+                    <option value="ch">Switzerland</option>
+                    <option value="at">Austria</option>
+                    <option value="au">Australia</option>
+                    <option value="nz">New Zealand</option>
+                    <option value="ca">Canada</option>
+                    <option value="br">Brazil</option>
+                    <option value="za">South Africa</option>
+                    <option value="ng">Nigeria</option>
+                    <option value="ke">Kenya</option>
+                </select>
+                <div class="validation-error" id="countryResidenceError"><i
+                        class="fas fa-exclamation-circle"></i><span></span></div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight: 600; color: #333;">Nationality <span
+                        class="text-danger">*</span></label>
+                <select name="nationality" class="form-select select2-modal" id="nationality" required
+                    style="width: 100%;">
+                    <option value="">Select Nationality</option>
+                    <option value="ae">Emirati</option>
+                    <option value="sa">Saudi</option>
+                    <option value="kw">Kuwaiti</option>
+                    <option value="qa">Qatari</option>
+                    <option value="bh">Bahraini</option>
+                    <option value="om">Omani</option>
+                    <option value="in">Indian</option>
+                    <option value="pk">Pakistani</option>
+                    <option value="gb">British</option>
+                    <option value="us">American</option>
+                    <option value="eg">Egyptian</option>
+                    <option value="jo">Jordanian</option>
+                    <option value="lb">Lebanese</option>
+                    <option value="sy">Syrian</option>
+                    <option value="iq">Iraqi</option>
+                    <option value="ye">Yemeni</option>
+                    <option value="ly">Libyan</option>
+                    <option value="tn">Tunisian</option>
+                    <option value="ma">Moroccan</option>
+                    <option value="dz">Algerian</option>
+                    <option value="sd">Sudanese</option>
+                    <option value="bd">Bangladeshi</option>
+                    <option value="lk">Sri Lankan</option>
+                    <option value="np">Nepali</option>
+                    <option value="ph">Filipino</option>
+                    <option value="id">Indonesian</option>
+                    <option value="my">Malaysian</option>
+                    <option value="cn">Chinese</option>
+                    <option value="jp">Japanese</option>
+                    <option value="kr">Korean</option>
+                    <option value="de">German</option>
+                    <option value="fr">French</option>
+                    <option value="it">Italian</option>
+                    <option value="es">Spanish</option>
+                    <option value="nl">Dutch</option>
+                    <option value="be">Belgian</option>
+                    <option value="ch">Swiss</option>
+                    <option value="at">Austrian</option>
+                    <option value="au">Australian</option>
+                    <option value="nz">New Zealander</option>
+                    <option value="ca">Canadian</option>
+                    <option value="br">Brazilian</option>
+                    <option value="za">South African</option>
+                    <option value="ng">Nigerian</option>
+                    <option value="ke">Kenyan</option>
+                </select>
+                <div class="validation-error" id="nationalityError"><i
+                        class="fas fa-exclamation-circle"></i><span></span></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight: 600; color: #333;">Email <span
+                        class="text-danger">*</span></label>
+                <input type="email" name="email" class="form-control" id="email" placeholder="Enter email" required
+                    style="border: 1px solid #ddd; padding: 10px 12px; height: 42px;">
+                <div class="validation-error" id="emailError"><i class="fas fa-exclamation-circle"></i><span></span>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label" style="font-weight: 600; color: #333;">Mobile Number <span
+                        class="text-danger">*</span></label>
+                <div class="phone-input-wrapper">
+                    <input type="tel" class="form-control" name="mobile_number" id="mobileNumber"
+                        placeholder="Enter mobile number" style="border: 1px solid #ddd;">
+                </div>
+                <div class="validation-error" id="mobileNumberError"><i
+                        class="fas fa-exclamation-circle"></i><span></span></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <label class="form-label" style="font-weight: 600; color: #333;">Ticket Type <span
+                        class="text-danger">*</span></label>
+                <select name="ticket_type" class="form-select select2-modal" id="ticketType" required
+                    style="width: 100%;">
+                    <option value="">Select Ticket Type</option>
+                    <option value="VIP">VIP Pass - 10.0 AED</option>
+                    <option value="EXHIBITOR">Exhibitor Pass - Free</option>
+                    <option value="VISITOR">Visitor Pass - Free</option>
+                </select>
+                <div class="validation-error" id="ticketTypeError"><i
+                        class="fas fa-exclamation-circle"></i><span></span></div>
+            </div>
+        </div>
+
+        <div class="consent-section" style="padding-top: 10px;">
+            <div class="form-check mb-3">
+                <input class="form-check-input" name="accepted_terms" type="checkbox" id="consent1" required
+                    style="margin-top: 3px;">
+                <label class="form-check-label" for="consent1" style="font-size: 13px; color: #555; line-height: 1.6;">
+                    I confirm that I am 21 years of age or older, and I have read and agree to the <a href="#"
+                        style="color: #e74c3c;">Terms & Conditions</a> and <a href="#" style="color: #e74c3c;">Privacy
+                        Policy</a>. I understand that my personal data will be processed and, where necessary, shared
+                    with contracted service providers, exhibitors, sponsors, and partners to deliver event services,
+                    facilitate my participation, and manage follow-ups or communications related to this event. <span
+                        class="text-danger">*</span>
+                </label>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" name="accepted_data_sharing" type="checkbox" id="consent2" required
+                    style="margin-top: 3px;">
+                <label class="form-check-label" for="consent2" style="font-size: 13px; color: #555; line-height: 1.6;">
+                    I understand that if I allow an exhibitor or sponsor at the event to scan my badge, whether physical
+                    or digital (e.g., via the Mobile App), I am providing them with my personal data. I acknowledge that
+                    the organizers have no control over any third-party use of this data and cannot be held liable for
+                    such use to the extent permitted by law. <span class="text-danger">*</span>
+                </label>
+            </div>
+
+            <div class="form-check">
+                <input class="form-check-input" name="accepted_marketing" type="checkbox" id="consent3"
+                    style="margin-top: 3px;">
+                <label class="form-check-label" for="consent3" style="font-size: 13px; color: #555; line-height: 1.6;">
+                    I consent to Kaoun International Limited and Dubai World Trade Centre, and where necessary their
+                    contracted service providers, exhibitors, sponsors, and partners, using my personal data for
+                    communications & marketing their products, services, and future events. I understand that I can
+                    withdraw my consent at any time.
+                </label>
+            </div>
+        </div>
+        <div class="modal-footer border-top justify-content-end" style="background: #f5f5f5; padding: 15px 25px;">
+            <button type="submit" class="btn px-4 py-2 me-2" id="submitBadgeBtn"
+                style="background: #e74c3c; color: white; border-radius: 6px; font-weight: 500; min-width: 120px;">
+                REGISTER
+            </button>
+            <button type="button" class="btn px-4 py-2" data-bs-dismiss="modal"
+                style="background: #6c757d; color: white; border-radius: 6px; font-weight: 500; min-width: 100px;">
+                CLOSE
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // ✅ Initialize Select2 FIRST
+        $('.select2-modal').select2({
+            dropdownParent: $('.modal')
+        });
+
+        // ✅ Form submit
+        document.getElementById("createBadgeForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const form = this;
+            const formData = new FormData(form);
+
+            document.querySelectorAll(".validation-error span").forEach(el => el.innerText = "");
+            document.querySelectorAll(".form-control, .form-select").forEach(el => el.style.border = "1px solid #ddd");
+
+            fetch(form.action, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-CSRFToken": getCSRFToken()
+                }
+            })
+                .then(res => res.json().then(data => ({ status: res.status, body: data })))
+                .then(({ status, body }) => {
+
+                    document.getElementById("globalFormError").style.display = "none";
+
+                    if (!body.success) {
+
+                        if (typeof body.errors === "string") {
+                            document.getElementById("globalFormErrorMsg").innerText = body.errors;
+                            document.getElementById("globalFormError").style.display = "block";
+                            document.querySelector(".modal-body").scrollTop = 0;
+                            return;
+                        }
+
+                        for (let field in body.errors) {
+
+                            let errorDiv = document.getElementById(fieldMap[field]);
+
+                            if (errorDiv) {
+                                let span = errorDiv.querySelector("span");
+                                if (span) {
+                                    span.innerText = body.errors[field];
+                                    errorDiv.style.display = "block";
+                                }
+                            }
+
+                            let input = document.querySelector(`[name="${field}"]`);
+                            if (input) input.style.border = "1px solid red";
+                        }
+
+                    } else {
+                        if (typeof body.message === "string") {
+                            document.getElementById("globalFormSuccessMsg").innerText = body.message;
+                            document.getElementById("globalFormSuccess").style.display = "block";
+                            document.querySelector(".modal-body").scrollTop = 0;
+                            return;
+                        }
+                        form.reset();
+
+                        document.querySelectorAll(".validation-error").forEach(el => el.style.display = "none");
+                        document.querySelectorAll(".validation-error span").forEach(el => el.innerText = "");
+                        document.querySelectorAll(".form-control, .form-select").forEach(el => el.style.border = "1px solid #ddd");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    if (err) {
+                            document.getElementById("globalFormErrorMsg").innerText = "Something Went Wrong";
+                            document.getElementById("globalFormError").style.display = "block";
+                            document.querySelector(".modal-body").scrollTop = 0;
+                            return;
+                        }
+
+                });
+        });
+
+        function getCSRFToken() {
+            return document.cookie
+                .split("; ")
+                .find(row => row.startsWith("csrftoken"))
+                ?.split("=")[1];
+        }
+
+        const fieldMap = {
+            first_name: "firstNameError",
+            last_name: "lastNameError",
+            job_title: "jobTitleError",
+            company_name: "companyNameError",
+            country_of_residence: "countryResidenceError",
+            nationality: "nationalityError",
+            email: "emailError",
+            mobile_number: "mobileNumberError",
+            ticket_type: "ticketTypeError"
+        };
+
+        // ✅ Normal inputs
+        document.querySelectorAll(".form-control").forEach(input => {
+            input.addEventListener("input", function () {
+                clearFieldError(this.name);
+            });
+        });
+
+        document.querySelectorAll(".form-select").forEach(input => {
+            input.addEventListener("change", function () {
+                clearFieldError(this.name);
+            });
+        });
+
+        // ✅ 🔥 IMPORTANT: Select2 change event
+        $('.select2-modal').on('select2:select', function () {
+            clearFieldError(this.name);
+        });
+
+        function clearFieldError(fieldName) {
+            const errorId = fieldMap[fieldName];
+            if (!errorId) return;
+
+            const errorDiv = document.getElementById(errorId);
+            if (errorDiv) {
+                const span = errorDiv.querySelector("span");
+                if (span) span.innerText = "";
+                errorDiv.style.display = "none";
+            }
+
+            const input = document.querySelector(`[name="${fieldName}"]`);
+            if (input) input.style.border = "1px solid #ddd";
+        }
+
+    });
+</script>
