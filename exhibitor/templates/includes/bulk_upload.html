@@ -421,6 +421,8 @@ async function loadPreviewData(page = 1) {
   fd.append("page", page);
   fd.append("page_size", pagination.pageSize);
 
+
+  
   try {
     const data = await postFormData("/bulk-upload-preview/", fd);
     
@@ -430,6 +432,10 @@ async function loadPreviewData(page = 1) {
     pagination.validCount   = data.valid_count;
     pagination.invalidCount = data.invalid_count;
     pagination.previewData  = data.data; // Store current page data
+    // ── NEW: snapshot current page's contribution ──
+    pagination._lastPageValid   = data.data.filter(r => r.status === "valid").length;
+    pagination._lastPageInvalid = data.data.filter(r => r.status === "invalid").length;
+
 
     renderPreviewTable(data.data);
     updateTabCounts(data.valid_count, data.invalid_count, data.total);
@@ -485,6 +491,7 @@ function updateRowFromData(row, data) {
     pill.className = `bpt-status ${data.status === 'valid' ? 'bpt-s-valid' : 'bpt-s-invalid'}`;
     pill.textContent = data.status;
     row.classList.toggle("bpt-row-invalid", data.status !== 'valid');
+    recalculateTabCounts()
   }
 }
 
@@ -806,6 +813,8 @@ document.addEventListener("click", async e => {
   const pill       = tr.children[13].querySelector(".bpt-status");
   pill.className   = `bpt-status ${isValid ? "bpt-s-valid" : "bpt-s-invalid"}`;
   pill.textContent = isValid ? "valid" : "invalid";
+  recalculateTabCounts()
+  applyTabFilter(pagination.activeTab);
     console.log(editedRows,"checkworkkkkking")
   // Save the updated status to edited rows
   if (editedRows.has(rowId)) {
@@ -898,5 +907,32 @@ function pollTaskStatus(taskId, intervalMs = 1500, timeoutMs = 120000) {
   });
 }
 
+// ─────────────────────────────────────────────────────────────
+// Recalculate tab counts from current DOM rows + server totals
+// ─────────────────────────────────────────────────────────────
+
+function recalculateTabCounts() {
+  const allRows = document.querySelectorAll(".bpt-row");
+
+  let validOnPage   = 0;
+  let invalidOnPage = 0;
+
+  allRows.forEach(row => {
+    if (row.dataset.bpstatus === "valid")   validOnPage++;
+    if (row.dataset.bpstatus === "invalid") invalidOnPage++;
+  });
+
+  // How many rows are on OTHER pages (not currently rendered)?
+  const otherPagesValid   = pagination.validCount   - pagination._lastPageValid;
+  const otherPagesInvalid = pagination.invalidCount - pagination._lastPageInvalid;
+
+  const newValid   = validOnPage   + otherPagesValid;
+  const newInvalid = invalidOnPage + otherPagesInvalid;
+  const newTotal   = newValid + newInvalid;
+
+  document.getElementById("tab-count-all").textContent     = newTotal;
+  document.getElementById("tab-count-valid").textContent   = newValid;
+  document.getElementById("tab-count-invalid").textContent = newInvalid;
+}
 
 </script>
