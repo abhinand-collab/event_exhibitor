@@ -69,11 +69,11 @@ class Attendee(models.Model):
     )
 
     first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100,blank=True,null=True)
     email = models.EmailField(unique=True)
-    mobile_number = models.CharField(max_length=20)
-    job_title = models.CharField(max_length=255)
-    company_name = models.CharField(max_length=255)
+    mobile_number = models.CharField(max_length=20,blank=True,null=True)
+    job_title = models.CharField(max_length=255,blank=True,null=True)
+    company_name = models.CharField(max_length=255,blank=True,null=True)
     country_of_residence = models.CharField(max_length=100)
     nationality = models.CharField(max_length=100)
     attendee_type = models.CharField(max_length=20, choices=AttendeeType.choices)
@@ -87,7 +87,12 @@ class Attendee(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.attendee_type})"
+        full_name = self.first_name
+
+        if self.last_name:
+            full_name += f" {self.last_name}"
+
+        return f"{full_name} ({self.attendee_type})"
 
 
 # ---------------------------

@@ -402,7 +402,7 @@ document.getElementById("confirmMappingBtn").addEventListener("click", async () 
   document.querySelector('[data-bptab="all"]').classList.add("active");
 
   // Load ALL preview data at once (server-side pagination still happens)
-  await loadPreviewData();
+  await loadPreviewData(1, "all");  // no applyTabFilter needed
   
   new bootstrap.Modal(document.getElementById("bulkPreviewModal")).show();
 });
@@ -411,7 +411,7 @@ document.getElementById("confirmMappingBtn").addEventListener("click", async () 
 // Load preview data from server
 // ─────────────────────────────────────────────────────────────
 
-async function loadPreviewData(page = 1) {
+async function loadPreviewData(page = 1, filter = pagination.activeTab) {
   const file = document.getElementById("bulkFile").files[0];
   if (!file) return;
 
@@ -420,29 +420,22 @@ async function loadPreviewData(page = 1) {
   fd.append("mapping", JSON.stringify(pagination.savedMapping));
   fd.append("page", page);
   fd.append("page_size", pagination.pageSize);
+  fd.append("filter", filter);  // NEW
 
-
-  
   try {
     const data = await postFormData("/bulk-upload-preview/", fd);
     
     pagination.currentPage  = data.page;
     pagination.totalPages   = data.total_pages;
-    pagination.totalRecords = data.total;
+    pagination.totalRecords = data.total;        // filtered count for pagination
     pagination.validCount   = data.valid_count;
     pagination.invalidCount = data.invalid_count;
-    pagination.previewData  = data.data; // Store current page data
-    // ── NEW: snapshot current page's contribution ──
-    pagination._lastPageValid   = data.data.filter(r => r.status === "valid").length;
-    pagination._lastPageInvalid = data.data.filter(r => r.status === "invalid").length;
-
+    pagination.previewData  = data.data;
 
     renderPreviewTable(data.data);
-    updateTabCounts(data.valid_count, data.invalid_count, data.total);
+    updateTabCounts(data.valid_count, data.invalid_count, data.total_all);
     renderPagination();
-    applyTabFilter(pagination.activeTab);
-    
-    // Re-apply any saved edits to the newly rendered rows
+    // NO applyTabFilter() call needed — server already filtered
     applySavedEditsToCurrentPage();
   } catch (error) {
     console.error("Error loading preview:", error);
@@ -499,11 +492,13 @@ function updateRowFromData(row, data) {
 // Render table rows for current page
 // ─────────────────────────────────────────────────────────────
 
-function updateTabCounts(valid, invalid, total) {
-  document.getElementById("tab-count-all").textContent     = total;
+// ── updateTabCounts uses total_all (grand total) for "All" badge ──
+function updateTabCounts(valid, invalid, totalAll) {
+  document.getElementById("tab-count-all").textContent     = totalAll;
   document.getElementById("tab-count-valid").textContent   = valid;
   document.getElementById("tab-count-invalid").textContent = invalid;
 }
+
 
 function renderPreviewTable(rows) {
   console.log("renderpreviewtable")
@@ -746,7 +741,8 @@ document.querySelectorAll(".bulk-preview-tab").forEach(btn => {
     document.querySelectorAll(".bulk-preview-tab").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     pagination.activeTab = btn.dataset.bptab;
-    applyTabFilter(pagination.activeTab);
+    pagination.currentPage = 1;
+    loadPreviewData(1, pagination.activeTab);  // server-side filter
   });
 });
 
@@ -911,28 +907,26 @@ function pollTaskStatus(taskId, intervalMs = 1500, timeoutMs = 120000) {
 // Recalculate tab counts from current DOM rows + server totals
 // ─────────────────────────────────────────────────────────────
 
-function recalculateTabCounts() {
-  const allRows = document.querySelectorAll(".bpt-row");
+// ── recalculateTabCounts: re-fetch counts from server after row edits ──
+async function recalculateTabCounts() {
+  // After a Check, re-fetch just page 1 of current filter to get fresh counts
+  // But don't re-render the table — just update the badges
+  const file = document.getElementById("bulkFile").files[0];
+  if (!file) return;
 
-  let validOnPage   = 0;
-  let invalidOnPage = 0;
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("mapping", JSON.stringify(pagination.savedMapping));
+  fd.append("page", pagination.currentPage);
+  fd.append("page_size", pagination.pageSize);
+  fd.append("filter", pagination.activeTab);
 
-  allRows.forEach(row => {
-    if (row.dataset.bpstatus === "valid")   validOnPage++;
-    if (row.dataset.bpstatus === "invalid") invalidOnPage++;
-  });
-
-  // How many rows are on OTHER pages (not currently rendered)?
-  const otherPagesValid   = pagination.validCount   - pagination._lastPageValid;
-  const otherPagesInvalid = pagination.invalidCount - pagination._lastPageInvalid;
-
-  const newValid   = validOnPage   + otherPagesValid;
-  const newInvalid = invalidOnPage + otherPagesInvalid;
-  const newTotal   = newValid + newInvalid;
-
-  document.getElementById("tab-count-all").textContent     = newTotal;
-  document.getElementById("tab-count-valid").textContent   = newValid;
-  document.getElementById("tab-count-invalid").textContent = newInvalid;
+  try {
+    const data = await postFormData("/bulk-upload-preview/", fd);
+    updateTabCounts(data.valid_count, data.invalid_count, data.total_all);
+  } catch(e) {
+    console.error("Count refresh failed", e);
+  }
 }
 
 </script>

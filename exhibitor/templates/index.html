@@ -1,315 +1,631 @@
 
-    {% extends 'base.html' %}
-    {% block content %}
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-    </div>
+{% extends 'base.html' %}
+{% block content %}
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
 
-    <!-- Top Header -->
-    <div class="top-header">
-        <div class="container-fluid px-4">
+<!-- Top Header -->
+<div class="top-header">
+    <div class="container-fluid px-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="search-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="form-control search-input form-control-sm" placeholder="Search...">
+                    </div>
+                    <select class="form-select form-select-sm" style="width: 200px; background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white; height: 32px;">
+                        <option>GULFOOD 2026</option>
+                        <option>Tech Summit 2025</option>
+                        <option>Innovation Expo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6 text-end d-flex align-items-center justify-content-end">
+                <span class="me-3">Welcome, Mohamed Belson</span>
+                <button class="btn btn-sm btn-outline-light" style="height: 32px;">
+                    <i class="fas fa-sign-out-alt"></i> Sign Out
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar Toggle Button (Mobile) -->
+<button class="sidebar-toggle" id="sidebarToggle">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- App Wrapper -->
+<div class="app-wrapper">
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="countdown-section">
+            <div class="countdown-title">Time Remaining</div>
+            <div class="countdown-display" id="countdown">
+                <span>16<small>Days</small></span>
+                <span>17<small>Hours</small></span>
+                <span>45<small>Mins</small></span>
+                <span>19<small>Secs</small></span>
+            </div>
+        </div>
+        
+        <div class="nav-menu">
+            <a href="#" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>HOME</span>
+            </a>
+            <div class="nav-parent open" id="badgesMenu">
+                <div class="nav-parent-left">
+                    <i class="fas fa-id-badge"></i>
+                    <span>BADGES</span>
+                </div>
+                <i class="fas fa-chevron-right nav-arrow"></i>
+            </div>
+            <div class="nav-submenu open" id="badgesSubmenu">
+                <a href="exhibitor.html" class="nav-item active">
+                    <i class="fas fa-user-tie"></i>
+                    <span>EXHIBITOR BADGE</span>
+                </a>
+                <a href="visitor.html" class="nav-item">
+                    <i class="fas fa-user-plus"></i>
+                    <span>VISITOR</span>
+                </a>
+            </div>
+            <a href="#" class="nav-item">
+                <i class="fas fa-trophy"></i>
+                <span>VIP NOMINATION</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-book"></i>
+                <span>MANUALS & GUIDES</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Badge Stats Card -->
+        <div class="badge-stats-card animate-fade-in">
             <div class="row align-items-center">
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="search-wrapper">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text" class="form-control search-input form-control-sm" placeholder="Search...">
+                <div class="col-md-8">
+                    <div class="stats-left">
+                        <div class="stats-icon">
+                            <i class="fas fa-cog"></i>
                         </div>
-                        <select class="form-select form-select-sm" style="width: 200px; background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white; height: 32px;">
-                            <option>GULFOOD 2026</option>
-                            <option>Tech Summit 2025</option>
-                            <option>Innovation Expo</option>
-                        </select>
+                        <div>
+                            <div class="stats-number"> {{used_pass}} <span>/ {{total_pass}} </span></div>
+                            <div class="stats-label">VIP PASS</div>
+                        </div>
+                        <div class="stats-breakdown ms-4">
+                            <span>Confirmed {{confirmed_count}} </span>
+                            <span>Pending  {{pending_count}}</span>
+                            <span>Invited {{invited_count}} </span>
+                        </div>
+                        <div class="circular-progress ms-3">
+                            <span>5</span>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6 text-end d-flex align-items-center justify-content-end">
-                    <span class="me-3">Welcome, Mohamed Belson</span>
-                    <button class="btn btn-sm btn-outline-light" style="height: 32px;">
-                        <i class="fas fa-sign-out-alt"></i> Sign Out
+            </div>
+        </div>
+
+        <!-- Action Cards -->
+        <div class="row g-2 mb-4 animate-fade-in">
+            <div class="col-md-4 mb-3">
+                <div class="action-card">
+                    <div class="action-card-icon purple">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h5>Create Single Badge</h5>
+                    <p>Register an employee from your company instantly for their badge</p>
+                    <button class="btn btn-action-card" data-bs-toggle="modal" data-bs-target="#createBadgeModal">
+                        <i class="fas fa-plus-circle me-2"></i>Create Now
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="action-card">
+                    <div class="action-card-icon orange">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <h5>Bulk Upload</h5>
+                    <p>Import multiple badges at once by uploading a completed Excel file containing all required badge details</p>
+                    <button class="btn btn-action-card yellow_btn" data-bs-toggle="modal" data-bs-target="#bulkUploadModal">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload File
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="action-card">
+                    <div class="action-card-icon pink">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h5>Send Invitations</h5>
+                    <p>Send one or multiple badges by entering their name and email.</p>
+                    <button class="btn btn-action-card green_btn" data-bs-toggle="modal" data-bs-target="#sendInvitationModal">
+                        <i class="fas fa-paper-plane me-2"></i>Send Invitation
                     </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Sidebar Toggle Button (Mobile) -->
-    <button class="sidebar-toggle" id="sidebarToggle">
-        <i class="fas fa-bars"></i>
-    </button>
+       {% include 'includes/registrations.html' %}
+    </main>
+</div>
 
-    <!-- App Wrapper -->
-    <div class="app-wrapper">
-        <!-- Sidebar -->
-        <nav class="sidebar" id="sidebar">
-            <div class="countdown-section">
-                <div class="countdown-title">Time Remaining</div>
-                <div class="countdown-display" id="countdown">
-                    <span>16<small>Days</small></span>
-                    <span>17<small>Hours</small></span>
-                    <span>45<small>Mins</small></span>
-                    <span>19<small>Secs</small></span>
+<!-- Create Badge Modal -->
+<div class="modal fade" id="createBadgeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 8px; overflow: hidden;">
+            <div class="modal-header border-bottom bg-white py-3">
+                <div class="d-flex align-items-center">
+                    <div style="width: 80px; height: 50px; border: 1px solid #eee; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-right: 15px; padding: 5px;">
+                        <img src="https://via.placeholder.com/70x40?text=Gulfood" alt="Gulfood" style="max-width: 100%; max-height: 100%;">
+                    </div>
+                    <div>
+                        <h5 class="modal-title mb-0" style="font-size: 20px; font-weight: 700; color: #333;">GULFOOD 2026</h5>
+                        <p class="mb-0" style="font-size: 13px; color: #666;">
+                            <i class="fas fa-calendar-alt me-1"></i>Jan. 26, 2026 - Jan. 30, 2026
+                        </p>
+                    </div>
                 </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             
-            <div class="nav-menu">
-                <a href="#" class="nav-item">
-                    <i class="fas fa-home"></i>
-                    <span>HOME</span>
-                </a>
-                <div class="nav-parent open" id="badgesMenu">
-                    <div class="nav-parent-left">
-                        <i class="fas fa-id-badge"></i>
-                        <span>BADGES</span>
-                    </div>
-                    <i class="fas fa-chevron-right nav-arrow"></i>
-                </div>
-                <div class="nav-submenu open" id="badgesSubmenu">
-                    <a href="exhibitor.html" class="nav-item active">
-                        <i class="fas fa-user-tie"></i>
-                        <span>EXHIBITOR BADGE</span>
-                    </a>
-                    <a href="visitor.html" class="nav-item">
-                        <i class="fas fa-user-plus"></i>
-                        <span>VISITOR</span>
-                    </a>
-                </div>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-trophy"></i>
-                    <span>VIP NOMINATION</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-book"></i>
-                    <span>MANUALS & GUIDES</span>
-                </a>
-            </div>
-        </nav>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Badge Stats Card -->
-            <div class="badge-stats-card animate-fade-in">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <div class="stats-left">
-                            <div class="stats-icon">
-                                <i class="fas fa-cog"></i>
-                            </div>
-                            <div>
-                                <div class="stats-number"> {{used_pass}} <span>/ {{total_pass}} </span></div>
-                                <div class="stats-label">VIP PASS</div>
-                            </div>
-                            <div class="stats-breakdown ms-4">
-                                <span>Confirmed {{confirmed_count}} </span>
-                                <span>Pending  {{pending_count}}</span>
-                                <span>Invited {{invited_count}} </span>
-                            </div>
-                            <div class="circular-progress ms-3">
-                                <span>5</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action Cards -->
-            <div class="row g-2 mb-4 animate-fade-in">
-                <div class="col-md-4 mb-3">
-                    <div class="action-card">
-                        <div class="action-card-icon purple">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <h5>Create Single Badge</h5>
-                        <p>Register an employee from your company instantly for their badge</p>
-                        <button class="btn btn-action-card" data-bs-toggle="modal" data-bs-target="#createBadgeModal">
-                            <i class="fas fa-plus-circle me-2"></i>Create Now
-                        </button>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <div class="action-card">
-                        <div class="action-card-icon orange">
-                            <i class="fas fa-file-upload"></i>
-                        </div>
-                        <h5>Bulk Upload</h5>
-                        <p>Import multiple badges at once by uploading a completed Excel file containing all required badge details</p>
-                        <button class="btn btn-action-card yellow_btn" data-bs-toggle="modal" data-bs-target="#bulkUploadModal">
-                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload File
-                        </button>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <div class="action-card">
-                        <div class="action-card-icon pink">
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                        <h5>Send Invitations</h5>
-                        <p>Send one or multiple badges by entering their name and email.</p>
-                        <button class="btn btn-action-card green_btn" data-bs-toggle="modal" data-bs-target="#sendInvitationModal">
-                            <i class="fas fa-paper-plane me-2"></i>Send Invitation
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-           {% include 'includes/registrations.html' %}
-        </main>
+            {% include 'includes/singlebadge_model.html' %}
+            
+        </div>
     </div>
+</div>
 
-    <!-- Create Badge Modal -->
-    <div class="modal fade" id="createBadgeModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content" style="border-radius: 8px; overflow: hidden;">
-                <div class="modal-header border-bottom bg-white py-3">
-                    <div class="d-flex align-items-center">
-                        <div style="width: 80px; height: 50px; border: 1px solid #eee; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-right: 15px; padding: 5px;">
-                            <img src="https://via.placeholder.com/70x40?text=Gulfood" alt="Gulfood" style="max-width: 100%; max-height: 100%;">
-                        </div>
-                        <div>
-                            <h5 class="modal-title mb-0" style="font-size: 20px; font-weight: 700; color: #333;">GULFOOD 2026</h5>
-                            <p class="mb-0" style="font-size: 13px; color: #666;">
-                                <i class="fas fa-calendar-alt me-1"></i>Jan. 26, 2026 - Jan. 30, 2026
-                            </p>
+<!-- Bulk Upload Modal -->
+{% include 'includes/bulk_upload.html' %}
+
+<!-- Send Invitation Modal -->
+<div class="modal fade" id="sendInvitationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none;">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title">
+                    <i class="fas fa-envelope me-2" style="color: #e74c3c;"></i>Send Invitations
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body" style="padding: 25px; background: #f8f9fa;">
+                <form id="invitationForm">
+                    <div id="invitationEntries">
+                        <div class="invitation-entry-row" style="display: flex; gap: 12px; align-items: center; margin-bottom: 15px;">
+                            <input type="text" class="form-control" placeholder="First Name" style="flex: 1;">
+                            <input type="text" class="form-control" placeholder="Last Name" style="flex: 1;">
+                            <input type="email" class="form-control" placeholder="Email" style="flex: 1;">
+                            <select class="form-select" style="flex: 1;">
+                                <option value="">Select Ticket</option>
+                                <option value="VIP">VIP Pass</option>
+                                <option value="exhibitor">Exhibitor Pass</option>
+                                <option value="visitor">Visitor Pass</option>
+                            </select>
                         </div>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                
-                {% include 'includes/singlebadge_model.html' %}
-                
-                
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="sendInviteBtn">Send Invitation</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Bulk Upload Modal -->
-    {% include 'includes/bulk_upload.html' %}
+<!-- Send Email Confirmation Modal -->
+<div class="modal fade" id="sendEmailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 12px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                <h5 class="modal-title text-white">Send Email</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>Are you sure you want to send email?</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmSendEmailBtn">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <!-- Send Invitation Modal -->
-    <div class="modal fade" id="sendInvitationModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none;">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title">
-                        <i class="fas fa-envelope me-2" style="color: #e74c3c;"></i>Send Invitations
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                
-                <div class="modal-body" style="padding: 25px; background: #f8f9fa;">
-                    <div style="background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 18px 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h6 style="color: #333; margin: 0 0 5px 0; font-size: 15px; font-weight: 600;">
-                                <i class="fas fa-file-upload me-2" style="color: #e74c3c;"></i>Import from File
-                            </h6>
-                            <p style="color: #666; margin: 0; font-size: 13px;">
-                                Upload a CSV or Excel file to import multiple contacts at once
-                            </p>
-                        </div>
-                        <input type="file" id="importFileInput" accept=".csv,.xlsx,.xls" style="display: none;">
-                        <button type="button" class="btn" id="importFileBtn" style="background: #e74c3c; color: white; border: none; border-radius: 8px; padding: 8px 20px; font-weight: 500;">
-                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload
-                        </button>
-                    </div>
-                    
-                    <form id="invitationForm">
-                        <div id="invitationEntries" style="max-height: 295px; overflow-y: auto; padding-right: 10px;">
-                            <div class="invitation-entry-row" style="display: flex; gap: 12px; align-items: center; margin-bottom: 15px;">
-                                <input type="text" class="form-control" placeholder="First Name" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
-                                <input type="text" class="form-control" placeholder="Last Name" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
-                                <input type="email" class="form-control" placeholder="Email" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
-                                <select class="form-select" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
-                                    <option value="">Select Ticket</option>
-                                    <option value="VIP">VIP Pass</option>
-                                    <option value="exhibitor">Exhibitor Pass</option>
-                                    <option value="visitor">Visitor Pass</option>
-                                </select>
-                                <button type="button" class="btn btn-link text-danger remove-entry-btn" style="padding: 0; font-size: 18px;">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="text-center mt-3">
-                            <button type="button" class="btn btn-primary" id="addEntryBtn">
-                                <i class="fas fa-plus me-2"></i>Add Entry
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                
-                <div class="modal-footer border-top" style="background: white; padding: 15px 25px; justify-content: space-between;">
-                    <div>
-                        <button type="button" class="btn px-4 py-2 me-2" id="sendInviteBtn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border-radius: 8px; font-weight: 500;">
-                            <i class="fas fa-paper-plane me-2"></i>Send Invitation
-                        </button>
-                        <button type="button" class="btn px-4 py-2" data-bs-dismiss="modal" style="background: white; color: #333; border: 1px solid #ddd; border-radius: 8px; font-weight: 500;">
-                            <i class="fas fa-times me-2"></i>Close
-                        </button>
-                    </div>
-                    <span style="color: #888; font-size: 13px;">
-                        <i class="fas fa-info-circle me-1"></i>All fields required
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 12px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-trash me-2"></i>Delete Record
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-exclamation-circle text-danger" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                <p class="mb-1" style="font-size: 16px; font-weight: 600;">Are you sure?</p>
+                <p class="text-muted mb-0" style="font-size: 14px;">This action cannot be undone.</p>
+                <!-- shows the attendee name for clarity -->
+                <p class="mt-2 fw-semibold" id="deleteTargetName" style="color: #dc3545;"></p>
+            </div>
+            <div class="modal-footer justify-content-center gap-2">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">
+                    <span id="deleteBtnText">Delete</span>
+                    <span id="deleteBtnSpinner" style="display:none;">
+                        <i class="fas fa-spinner fa-spin me-1"></i> Deleting...
                     </span>
-                </div>
+                </button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Send Email Confirmation Modal -->
-    <div class="modal fade" id="sendEmailModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
-                <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 25px 25px 20px;">
-                    <div class="w-100 text-center">
-                        <div style="width: 70px; height: 70px; background: rgba(255,255,255,0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-                            <i class="fas fa-envelope" style="font-size: 32px; color: white;"></i>
-                        </div>
-                        <h5 class="modal-title text-white mb-0" style="font-size: 20px; font-weight: 600;">Send Email</h5>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white position-absolute" style="top: 15px; right: 15px;" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center" style="padding: 30px 25px;">
-                    <p style="font-size: 17px; color: #333; margin-bottom: 8px; font-weight: 500;">Are you sure you want to send email?</p>
-                    <p style="font-size: 14px; color: #777; margin-bottom: 0;">An invitation email will be sent to the recipient.</p>
-                </div>
-                <div class="modal-footer border-0 justify-content-center" style="padding: 0 25px 25px; gap: 12px;">
-                    <button type="button" class="btn btn-secondary px-4 py-2" data-bs-dismiss="modal" style="border-radius: 8px; min-width: 120px; font-weight: 500;">
-                        <i class="fas fa-times me-2"></i>Cancel
-                    </button>
-                    <button type="button" class="btn btn-primary px-4 py-2" id="confirmSendEmailBtn" style="border-radius: 8px; min-width: 120px; font-weight: 500; background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%); border: none;">
-                        <i class="fas fa-paper-plane me-2"></i>Send
-                    </button>
-                </div>
+<!-- Edit Registration Modal -->
+<div class="modal fade" id="editBadgeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #1a56db; color: white; padding: 18px 25px;">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Edit Registration
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-        </div>
-    </div>
+            <div class="modal-body" style="padding: 25px;">
+                <form id="editBadgeForm" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" id="editAttendeeId">
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
-                <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 25px 25px 20px;">
-                    <div class="w-100 text-center">
-                        <div style="width: 70px; height: 70px; background: rgba(255,255,255,0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-                            <i class="fas fa-trash-alt" style="font-size: 32px; color: white;"></i>
-                        </div>
-                        <h5 class="modal-title text-white mb-0" style="font-size: 20px; font-weight: 600;">Delete Record</h5>
+                    <div id="editGlobalError" style="display:none; background:#fdf2f2; border:1px solid #e74c3c; color:#c0392b; padding:12px 16px; border-radius:6px; margin-bottom:16px; font-size:14px;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="editGlobalErrorMsg"></span>
                     </div>
-                    <button type="button" class="btn-close btn-close-white position-absolute" style="top: 15px; right: 15px;" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center" style="padding: 30px 25px;">
-                    <p style="font-size: 17px; color: #333; margin-bottom: 8px; font-weight: 500;">Are you sure you want to delete this record?</p>
-                    <p style="font-size: 14px; color: #777; margin-bottom: 0;">This action cannot be undone.</p>
-                </div>
-                <div class="modal-footer border-0 justify-content-center" style="padding: 0 25px 25px; gap: 12px;">
-                    <button type="button" class="btn btn-secondary px-4 py-2" data-bs-dismiss="modal" style="border-radius: 8px; min-width: 120px; font-weight: 500;">
-                        <i class="fas fa-times me-2"></i>Cancel
-                    </button>
-                    <button type="button" class="btn btn-danger px-4 py-2" id="confirmDeleteBtn" style="border-radius: 8px; min-width: 120px; font-weight: 500;">
-                        <i class="fas fa-trash me-2"></i>Delete
-                    </button>
-                </div>
+                    <div id="editGlobalSuccess" style="display:none; background:#f0fdf4; border:1px solid #2ecc71; color:#27ae60; padding:12px 16px; border-radius:6px; margin-bottom:16px; font-size:14px;">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span id="editGlobalSuccessMsg"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">First Name <span class="text-danger">*</span></label>
+                            <input type="text" id="editFirstName" name="first_name" class="form-control" required>
+                            <div class="text-danger mt-1 small" id="editFirstNameError" style="display:none;"></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Last Name</label>
+                            <input type="text" id="editLastName" name="last_name" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Job Title</label>
+                            <input type="text" id="editJobTitle" name="job_title" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Company Name</label>
+                            <input type="text" id="editCompanyName" name="company_name" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                            <input type="email" id="editEmail" name="email" class="form-control" required>
+                            <div class="text-danger mt-1 small" id="editEmailError" style="display:none;"></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Mobile Number</label>
+                            <input type="tel" id="editMobileNumber" name="mobile_number" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Ticket Type <span class="text-danger">*</span></label>
+                            <select id="editTicketType" name="ticket_type" class="form-select">
+                                <option value="">Select Ticket Type</option>
+                                <option value="VIP">VIP Pass</option>
+                                <option value="EXHIBITOR">Exhibitor Pass</option>
+                                <option value="VISITOR">Visitor Pass</option>
+                            </select>
+                            <div class="text-danger mt-1 small" id="editTicketTypeError" style="display:none;"></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Status</label>
+                            <select id="editStatus" name="status" class="form-select">
+                                <option value="PENDING">Pending</option>
+                                <option value="INVITED">Invited</option>
+                                <option value="CONFIRMED">Confirmed</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="background:#f5f5f5;">
+                <button type="button" class="btn btn-primary" id="saveEditBtn">
+                    <span id="saveEditBtnText">SAVE CHANGES</span>
+                    <span id="saveEditBtnSpinner" style="display:none;">
+                        <i class="fas fa-spinner fa-spin me-1"></i> Saving...
+                    </span>
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">CLOSE</button>
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Field → error element map ─────────────────────────────────────────────────
+const editFieldErrorMap = {
+    first_name  : 'editFirstNameError',
+    email       : 'editEmailError',
+    ticket_type : 'editTicketTypeError',
+};
+
+// ── Store fetched data here, apply after modal is visible ─────────────────────
+let pendingAttendeeData = null;
+
+// ── Open modal on edit button click ──────────────────────────────────────────
+document.querySelectorAll('.btn-action-table.edit').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        const row        = this.closest('tr');
+        const attendeeId = row.dataset.attendeeId;
+
+        document.getElementById('editAttendeeId').value = attendeeId;
+        resetEditForm();
+
+        fetch(`/get-attendee/${attendeeId}/`)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Could not load attendee data.');
+                    return;
+                }
+                // Store and open — values applied in shown.bs.modal
+                pendingAttendeeData = data.attendee;
+                bootstrap.Modal.getOrCreateInstance(
+                    document.getElementById('editBadgeModal')
+                ).show();
+            })
+            .catch(() => alert('Network error. Please try again.'));
+    });
+});
+
+// ── Populate form AFTER modal animation completes (Select2 needs visible DOM) ─
+document.getElementById('editBadgeModal').addEventListener('shown.bs.modal', function () {
+    if (!pendingAttendeeData) return;
+    const a = pendingAttendeeData;
+    pendingAttendeeData = null;
+
+    document.getElementById('editFirstName').value    = a.first_name    || '';
+    document.getElementById('editLastName').value     = a.last_name     || '';
+    document.getElementById('editJobTitle').value     = a.job_title     || '';
+    document.getElementById('editCompanyName').value  = a.company_name  || '';
+    document.getElementById('editEmail').value        = a.email         || '';
+    document.getElementById('editMobileNumber').value = a.mobile_number || '';
+    document.getElementById('editTicketType').value   = a.ticket_type   || '';
+    document.getElementById('editStatus').value       = a.status        || 'PENDING';
+});
+
+// ── Save button ───────────────────────────────────────────────────────────────
+document.getElementById('saveEditBtn').addEventListener('click', function () {
+    resetEditForm();
+
+    const attendeeId = document.getElementById('editAttendeeId').value;
+
+    const payload = {
+        first_name   : document.getElementById('editFirstName').value.trim(),
+        last_name    : document.getElementById('editLastName').value.trim(),
+        job_title    : document.getElementById('editJobTitle').value.trim(),
+        company_name : document.getElementById('editCompanyName').value.trim(),
+        email        : document.getElementById('editEmail').value.trim(),
+        mobile_number: document.getElementById('editMobileNumber').value.trim(),
+        ticket_type  : document.getElementById('editTicketType').value,
+        status       : document.getElementById('editStatus').value,
+    };
+
+    // Show spinner
+    document.getElementById('saveEditBtnText').style.display    = 'none';
+    document.getElementById('saveEditBtnSpinner').style.display = 'inline';
+
+    fetch(`/update-attendee/${attendeeId}/`, {
+        method : 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken' : getCsrfToken(),
+        },
+        body: JSON.stringify(payload),
+    })
+    .then(r => r.json().then(data => ({ ok: r.ok, body: data })))
+    .then(({ ok, body }) => {
+        if (!body.success) {
+            if (typeof body.errors === 'string') {
+                // Global error string
+                showEditGlobalError(body.errors);
+            } else {
+                // Field-level errors object
+                Object.entries(body.errors).forEach(([field, msg]) => {
+                    const errEl = document.getElementById(editFieldErrorMap[field]);
+                    const inputEl = document.getElementById({
+                        first_name  : 'editFirstName',
+                        email       : 'editEmail',
+                        ticket_type : 'editTicketType',
+                    }[field]);
+
+                    if (errEl) {
+                        errEl.textContent = msg;
+                        errEl.style.display = 'block';
+                    }
+                    if (inputEl) {
+                        inputEl.style.borderColor = '#e74c3c';
+                    }
+                });
+            }
+            return;
+        }
+
+        // ── Success: update the row in-place ─────────────────────────────────
+        showEditGlobalSuccess(body.message || 'Registration updated successfully.');
+
+        const row = document.querySelector(`tr[data-attendee-id="${attendeeId}"]`);
+        if (row && body.attendee) {
+            const a = body.attendee;
+            row.querySelector('.name').textContent  = `${a.first_name} ${a.last_name}`.trim();
+            row.querySelector('.email').textContent = a.email;
+            row.cells[2].textContent = a.job_title    || '';
+            row.cells[6].textContent = a.company_name || '';
+            row.cells[4].textContent = a.ticket_class || '-';
+
+            const badge = row.cells[9].querySelector('.status-badge');
+            if (badge) {
+                badge.className   = `status-badge ${a.status.toLowerCase()}`;
+                badge.textContent = a.status_display;
+            }
+        }
+    })
+    .catch(() => showEditGlobalError('Network error. Please try again.'))
+    .finally(() => {
+        document.getElementById('saveEditBtnText').style.display    = 'inline';
+        document.getElementById('saveEditBtnSpinner').style.display = 'none';
+    });
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function resetEditForm() {
+    document.getElementById('editGlobalError').style.display   = 'none';
+    document.getElementById('editGlobalSuccess').style.display = 'none';
+
+    // Clear all field errors
+    Object.values(editFieldErrorMap).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = ''; el.style.display = 'none'; }
+    });
+
+    // Reset border colors
+    ['editFirstName', 'editEmail', 'editTicketType'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.borderColor = '';
+    });
+}
+
+function showEditGlobalError(msg) {
+    const el = document.getElementById('editGlobalError');
+    document.getElementById('editGlobalErrorMsg').textContent = msg;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showEditGlobalSuccess(msg) {
+    const el = document.getElementById('editGlobalSuccess');
+    document.getElementById('editGlobalSuccessMsg').textContent = msg;
+    el.style.display = 'block';
+}
+
+function getCsrfToken() {
+    return document.cookie.split('; ')
+        .find(r => r.startsWith('csrftoken'))
+        ?.split('=')[1] || '';
+}
+
+// ═══════════════════════════════════════════
+//  DELETE REGISTRATION
+// ═══════════════════════════════════════════
+let deleteTargetId   = null;
+let deleteTargetRow  = null;
+
+// ── Open confirmation modal on delete button click ────────────────────────────
+document.querySelectorAll('.btn-action-table.delete').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        const row        = this.closest('tr');
+        const attendeeId = row.dataset.attendeeId;
+        const name       = row.querySelector('.name')?.textContent?.trim() || 'this record';
+
+        deleteTargetId  = attendeeId;
+        deleteTargetRow = row;
+
+        // Show name in modal for clarity
+        document.getElementById('deleteTargetName').textContent = name;
+
+        // Reset button state
+        document.getElementById('deleteBtnText').style.display    = 'inline';
+        document.getElementById('deleteBtnSpinner').style.display = 'none';
+        document.getElementById('confirmDeleteBtn').disabled       = false;
+
+        bootstrap.Modal.getOrCreateInstance(
+            document.getElementById('deleteModal')
+        ).show();
+    });
+});
+
+// ── Confirm delete ─────────────────────────────────────────────────────────────
+document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+    if (!deleteTargetId) return;
+
+    // Show spinner
+    document.getElementById('deleteBtnText').style.display    = 'none';
+    document.getElementById('deleteBtnSpinner').style.display = 'inline';
+    this.disabled = true;
+
+    fetch(`/delete-attendee/${deleteTargetId}/`, {
+        method : 'POST',
+        headers: { 'X-CSRFToken': getCsrfToken() },
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) {
+            alert(data.error || 'Could not delete. Please try again.');
+            return;
+        }
+
+        // Close modal
+        bootstrap.Modal.getInstance(
+            document.getElementById('deleteModal')
+        ).hide();
+
+        // Remove row from table with a fade animation
+        if (deleteTargetRow) {
+            deleteTargetRow.style.transition = 'opacity 0.3s ease';
+            deleteTargetRow.style.opacity    = '0';
+            setTimeout(() => {
+                deleteTargetRow.remove();
+                deleteTargetId  = null;
+                deleteTargetRow = null;
+
+                // Update "Showing X to Y of Z" count if visible
+                updatePaginationInfo();
+            }, 300);
+        }
+    })
+    .catch(() => alert('Network error. Please try again.'))
+    .finally(() => {
+        document.getElementById('deleteBtnText').style.display    = 'inline';
+        document.getElementById('deleteBtnSpinner').style.display = 'none';
+        document.getElementById('confirmDeleteBtn').disabled       = false;
+    });
+});
+
+// ── Decrement the "Showing X to Y of Z entries" count after delete ────────────
+function updatePaginationInfo() {
+    const infoEl = document.querySelector('.pagination-info');
+    if (!infoEl) return;
+
+    // e.g. "Showing 1 to 10 of 42 entries"
+    const match = infoEl.textContent.match(/Showing (\d+) to (\d+) of (\d+)/);
+    if (!match) return;
+
+    const total    = parseInt(match[3]) - 1;
+    const start    = parseInt(match[1]);
+    const end      = Math.max(start, parseInt(match[2]) - 1);
+
+    infoEl.textContent = `Showing ${start} to ${end} of ${total} entries`;
+}
+</script>
 {% endblock %}

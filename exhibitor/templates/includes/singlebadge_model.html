@@ -22,10 +22,10 @@
                 </div>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label" style="font-weight: 600; color: #333;">Last Name <span
-                        class="text-danger">*</span></label>
+                <label class="form-label" style="font-weight: 600; color: #333;">Last Name 
+                    <span class="text-danger"></span></label>
                 <input type="text" name="last_name" class="form-control" id="lastName" placeholder="Enter your lastname"
-                    required style="border: 1px solid #ddd; padding: 10px 12px;">
+                     style="border: 1px solid #ddd; padding: 10px 12px;">
                 <div class="validation-error" id="lastNameError"><i class="fas fa-exclamation-circle"></i><span></span>
                 </div>
             </div>
@@ -33,18 +33,18 @@
 
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label" style="font-weight: 600; color: #333;">Job Title <span
-                        class="text-danger">*</span></label>
+                <label class="form-label" style="font-weight: 600; color: #333;">Job Title 
+                    <span class="text-danger"></span></label>
                 <input type="text" name="job_title" class="form-control" id="jobTitle"
-                    placeholder="Enter your job title" required style="border: 1px solid #ddd; padding: 10px 12px;">
+                    placeholder="Enter your job title" style="border: 1px solid #ddd; padding: 10px 12px;">
                 <div class="validation-error" id="jobTitleError"><i class="fas fa-exclamation-circle"></i><span></span>
                 </div>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label" style="font-weight: 600; color: #333;">Company Name <span
-                        class="text-danger">*</span></label>
+                <label class="form-label" style="font-weight: 600; color: #333;">Company Name 
+                    <span class="text-danger"></span></label>
                 <input type="text" name="company_name" class="form-control" id="companyName"
-                    placeholder="Enter your company name" required style="border: 1px solid #ddd; padding: 10px 12px;">
+                    placeholder="Enter your company name" style="border: 1px solid #ddd; padding: 10px 12px;">
                 <div class="validation-error" id="companyNameError"><i
                         class="fas fa-exclamation-circle"></i><span></span></div>
             </div>
@@ -173,8 +173,8 @@
                 </div>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label" style="font-weight: 600; color: #333;">Mobile Number <span
-                        class="text-danger">*</span></label>
+                <label class="form-label" style="font-weight: 600; color: #333;">Mobile Number 
+                    <span class="text-danger"></span></label>
                 <div class="phone-input-wrapper">
                     <input type="tel" class="form-control" name="mobile_number" id="mobileNumber"
                         placeholder="Enter mobile number" style="border: 1px solid #ddd;">
@@ -278,6 +278,7 @@
                 .then(({ status, body }) => {
 
                     document.getElementById("globalFormError").style.display = "none";
+                    document.getElementById("globalFormSuccess").style.display = "none";
 
                     if (!body.success) {
 
@@ -305,13 +306,17 @@
                         }
 
                     } else {
+                        form.reset();
+                        // ✅ reset all Select2 fields
+                        $('.select2-modal').val(null).trigger('change');
+                        console.log("checksuccessss")
                         if (typeof body.message === "string") {
                             document.getElementById("globalFormSuccessMsg").innerText = body.message;
                             document.getElementById("globalFormSuccess").style.display = "block";
                             document.querySelector(".modal-body").scrollTop = 0;
                             return;
                         }
-                        form.reset();
+                        
 
                         document.querySelectorAll(".validation-error").forEach(el => el.style.display = "none");
                         document.querySelectorAll(".validation-error span").forEach(el => el.innerText = "");

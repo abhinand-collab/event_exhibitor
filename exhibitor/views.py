@@ -60,6 +60,37 @@ def index(request):
         exhibitor=exhibitor
     ).select_related("badge", "exhibitor").order_by("-id")
 
+    # ── Filters ─────────────────────────────────────────────────────────────
+    search    = request.GET.get("search", "").strip()
+    status    = request.GET.get("status", "").strip()
+    ticket    = request.GET.get("ticket_type", "").strip()
+
+    if search:
+    # Split into words to handle "John Doe" → search first+last name combination
+        parts = search.split()
+
+        if len(parts) >= 2:
+            # Multi-word: try full name match across first+last AND individual field matches
+            registrations_qs = registrations_qs.filter(
+                Q(first_name__icontains=parts[0], last_name__icontains=parts[1]) |  # "John Doe"
+                Q(first_name__icontains=parts[1], last_name__icontains=parts[0]) |  # "Doe John" (reversed)
+                Q(job_title__icontains=search)    |
+                Q(company_name__icontains=search)
+            )
+        else:
+            # Single word: search across all fields
+            registrations_qs = registrations_qs.filter(
+                Q(first_name__icontains=search)   |
+                Q(last_name__icontains=search)    |
+                Q(job_title__icontains=search)    |
+                Q(company_name__icontains=search)
+            )
+    if status:
+        registrations_qs = registrations_qs.filter(status__iexact=status)
+
+    if ticket:
+        registrations_qs = registrations_qs.filter(badge__badge_type__iexact=ticket)
+
     # Get page size from request or default to 10
     page_size = request.GET.get('page_size', 10)
     try:
@@ -273,82 +304,97 @@ def bulk_upload_preview(request):
     mapping = json.loads(request.POST.get("mapping", "{}"))
     page = int(request.POST.get("page", 1))
     page_size = int(request.POST.get("page_size", 50))
+    filter_status = request.POST.get("filter", "all")  # NEW
 
     if not file:
         return JsonResponse({"success": False, "error": "No file uploaded"}, status=400)
 
     try:
         # Clear old session data when uploading new file
-        if "bulk_preview_data" in request.session:
-            del request.session["bulk_preview_data"]
-        
-        # ── Parse file ──────────────────────────────────────────────────────
-        if file.name.endswith(".csv"):
-            df = pd.read_csv(file)
-        else:
-            df = pd.read_excel(file)
-
-        df.columns = [col.strip() for col in df.columns]
-
-        if mapping:
-            df.rename(columns=mapping, inplace=True)
-
-        df = df.where(pd.notnull(df), None)
-
-        # Load all existing emails once (avoid per-row DB hits)
-        existing_emails = set(
-            Attendee.objects.values_list("email", flat=True)
-        )
-
-        # ── Build preview rows ──────────────────────────────────────────────
-        preview_data = []
-        valid_count = 0
-        invalid_count = 0
-
-        for index, row in df.iterrows():
-            # Create a row dict for validation
-            row_dict = {
-                "first_name": row.get("first_name"),
-                "email": row.get("email"),
-                "ticket_type": row.get("ticket_type"),
-                "accepted_terms": row.get("accepted_terms"),
-            }
-            errors = _validate_row(row_dict, existing_emails)
-            status = "valid" if not errors else "invalid"
-
-            if status == "valid":
-                valid_count += 1
+        preview_data = request.session.get("bulk_preview_data")
+        if not preview_data:  # Fresh upload
+            if "bulk_preview_data" in request.session:
+                del request.session["bulk_preview_data"]
+            
+            # ── Parse file ──────────────────────────────────────────────────────
+            if file.name.endswith(".csv"):
+                df = pd.read_csv(file)
             else:
-                invalid_count += 1
+                df = pd.read_excel(file)
 
-            preview_data.append({
-                "id": index,
-                "row": index + 1,
-                "first_name": _clean(row.get("first_name")),
-                "last_name": _clean(row.get("last_name")),
-                "email": _clean(row.get("email")),
-                "mobile_number": _clean(row.get("mobile_number")),
-                "country": _clean(row.get("country")),
-                "nationality": _clean(row.get("nationality")),
-                "company_name": _clean(row.get("company_name")),
-                "job_title": _clean(row.get("job_title")),
-                "ticket_type": _clean(row.get("ticket_type")),
-                "accepted_terms": _clean(row.get("accepted_terms")),
-                "accepted_data_sharing": _clean(row.get("accepted_data_sharing", False)),
-                "accepted_marketing": _clean(row.get("accepted_marketing", False)),
-                "status": status,
-                "errors": errors,
-            })
+            df.columns = [col.strip() for col in df.columns]
 
-        # Store in session
-        request.session["bulk_preview_data"] = preview_data
-        request.session.modified = True
+            if mapping:
+                df.rename(columns=mapping, inplace=True)
 
-        total_records = len(preview_data)
+            df = df.where(pd.notnull(df), None)
+
+            # Load all existing emails once (avoid per-row DB hits)
+            existing_emails = set(
+                Attendee.objects.values_list("email", flat=True)
+            )
+
+            # ── Build preview rows ──────────────────────────────────────────────
+            preview_data = []
+            valid_count = 0
+            invalid_count = 0
+
+            for index, row in df.iterrows():
+                # Create a row dict for validation
+                row_dict = {
+                    "first_name": row.get("first_name"),
+                    "email": row.get("email"),
+                    "ticket_type": row.get("ticket_type"),
+                    "accepted_terms": row.get("accepted_terms"),
+                }
+                errors = _validate_row(row_dict, existing_emails)
+                status = "valid" if not errors else "invalid"
+
+                if status == "valid":
+                    valid_count += 1
+                else:
+                    invalid_count += 1
+
+                preview_data.append({
+                    "id": index,
+                    "row": index + 1,
+                    "first_name": _clean(row.get("first_name")),
+                    "last_name": _clean(row.get("last_name")),
+                    "email": _clean(row.get("email")),
+                    "mobile_number": _clean(row.get("mobile_number")),
+                    "country": _clean(row.get("country")),
+                    "nationality": _clean(row.get("nationality")),
+                    "company_name": _clean(row.get("company_name")),
+                    "job_title": _clean(row.get("job_title")),
+                    "ticket_type": _clean(row.get("ticket_type")),
+                    "accepted_terms": _clean(row.get("accepted_terms")),
+                    "accepted_data_sharing": _clean(row.get("accepted_data_sharing", False)),
+                    "accepted_marketing": _clean(row.get("accepted_marketing", False)),
+                    "status": status,
+                    "errors": errors,
+                })
+
+            # Store in session
+            request.session["bulk_preview_data"] = preview_data
+            request.session.modified = True
+        
+         # Always compute total counts from full dataset
+        valid_count = sum(1 for r in preview_data if r["status"] == "valid")
+        invalid_count = sum(1 for r in preview_data if r["status"] == "invalid")
+
+        # Apply tab filter BEFORE paginating
+        if filter_status == "valid":
+            filtered = [r for r in preview_data if r["status"] == "valid"]
+        elif filter_status == "invalid":
+            filtered = [r for r in preview_data if r["status"] == "invalid"]
+        else:
+            filtered = preview_data
+
+        total_records = len(filtered)
         total_pages = ceil(total_records / page_size)
         start = (page - 1) * page_size
         end = start + page_size
-        paginated_data = preview_data[start:end]
+        paginated_data = filtered[start:end]
 
         return JsonResponse({
             "success": True,
@@ -356,9 +402,11 @@ def bulk_upload_preview(request):
             "valid_count": valid_count,
             "invalid_count": invalid_count,
             "total": total_records,
+            "total_all": len(preview_data),  # always the grand total
             "page": page,
             "page_size": page_size,
-            "total_pages": total_pages
+            "total_pages": total_pages,
+            "filter": filter_status,
         })
 
     except Exception as e:
@@ -379,6 +427,28 @@ def bulk_upload_save(request):
         return JsonResponse({
             "success": False,
             "errors": "No data found in session."
+        }, status=400)
+    
+    # ── Pass limit check ────────────────────────────────────────────────────
+    exhibitor = request.user.exhibitor
+    used       = Badge.objects.filter(attendee__exhibitor=exhibitor).count()
+    valid_rows = [r for r in preview_data if r.get("status") == "valid"]
+    remaining  = exhibitor.pass_limit - used
+
+    if remaining <= 0:
+        return JsonResponse({
+            "success": False,
+            "errors": f"Pass limit reached. You have used all {exhibitor.pass_limit} passes."
+        }, status=400)
+
+    if len(valid_rows) > remaining:
+        return JsonResponse({
+            "success": False,
+            "errors": (
+                f"Not enough passes remaining. "
+                f"You are trying to import {len(valid_rows)} valid record(s), "
+                f"but only {remaining} pass(es) remain out of your limit of {exhibitor.pass_limit}."
+            )
         }, status=400)
 
     # 🚀 Send to Celery
@@ -481,3 +551,136 @@ def bulk_task_status(request, task_id):
         }, status=500)
     
     return JsonResponse({"state": result.state})
+
+
+# =============================================================================
+# EDIT ATTENDEE — GET current data
+# =============================================================================
+@login_required
+@require_http_methods(["GET"])
+def get_attendee(request, attendee_id):
+    exhibitor = request.user.exhibitor
+    attendee  = get_object_or_404(Attendee, id=attendee_id, exhibitor=exhibitor)
+
+    ticket_type  = ''
+    ticket_class = ''
+    try:
+        ticket_type  = attendee.badge.badge_type   or ''
+        ticket_class = attendee.badge.ticket_class or ''
+    except Exception:
+        pass
+
+    return JsonResponse({
+        'success': True,
+        'attendee': {
+            'id'                   : attendee.id,
+            'first_name'           : attendee.first_name,
+            'last_name'            : attendee.last_name  or '',
+            'email'                : attendee.email,
+            'mobile_number'        : attendee.mobile_number or '',
+            'job_title'            : attendee.job_title     or '',
+            'company_name'         : attendee.company_name  or '',
+            'status'               : attendee.status,
+            'accepted_terms'       : attendee.accepted_terms,
+            'accepted_data_sharing': attendee.accepted_data_sharing,
+            'accepted_marketing'   : attendee.accepted_marketing,
+            'ticket_type'          : ticket_type,
+            'ticket_class'         : ticket_class,
+        }
+    })
+
+
+# =============================================================================
+# EDIT ATTENDEE — SAVE changes
+# =============================================================================
+@login_required
+@require_POST
+def update_attendee(request, attendee_id):
+    exhibitor = request.user.exhibitor
+    attendee  = get_object_or_404(Attendee, id=attendee_id, exhibitor=exhibitor)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'errors': 'Invalid JSON.'}, status=400)
+
+    # ── Basic validation ──────────────────────────────────────────────────────
+    errors = {}
+    first_name  = data.get('first_name', '').strip()
+    email       = data.get('email', '').strip()
+    ticket_type = data.get('ticket_type', '').strip()
+
+    if not first_name:
+        errors['first_name'] = 'First name is required.'
+    if not email or '@' not in email:
+        errors['email'] = 'A valid email is required.'
+    if not ticket_type:
+        errors['ticket_type'] = 'Ticket type is required.'
+
+    # Email uniqueness (exclude self)
+    if email and not errors.get('email'):
+        if Attendee.objects.filter(email=email).exclude(id=attendee_id).exists():
+            errors['email'] = 'This email is already registered to another attendee.'
+
+    if errors:
+        return JsonResponse({'success': False, 'errors': errors}, status=400)
+
+    # ── Persist ───────────────────────────────────────────────────────────────
+    ticket_class = f"{ticket_type} Pass"
+    try:
+        with transaction.atomic():
+            attendee.first_name    = first_name
+            attendee.last_name     = data.get('last_name', '').strip()
+            attendee.email         = email
+            attendee.mobile_number = data.get('mobile_number', '').strip() or None
+            attendee.job_title     = data.get('job_title', '').strip()     or None
+            attendee.company_name  = data.get('company_name', '').strip()  or None
+            attendee.status        = data.get('status', attendee.status)
+            attendee.save()
+
+            # Update / create badge safely (OneToOne may raise exception not return None)
+            try:
+                badge = attendee.badge
+                badge.badge_type   = ticket_type
+                badge.ticket_class = ticket_class
+                badge.save()
+            except Exception:
+                Badge.objects.create(
+                    attendee     = attendee,
+                    badge_type   = ticket_type,
+                    ticket_class = ticket_class,
+                )
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'errors': _friendly_db_error(str(e))}, status=500)
+
+    return JsonResponse({
+        'success': True,
+        'message': 'Registration updated successfully.',
+        'attendee': {
+            'first_name'    : attendee.first_name,
+            'last_name'     : attendee.last_name,
+            'email'         : attendee.email,
+            'job_title'     : attendee.job_title    or '',
+            'company_name'  : attendee.company_name or '',
+            'status'        : attendee.status,
+            'status_display': attendee.get_status_display(),
+            'ticket_class'  : ticket_class,
+        }
+    })
+
+
+# =============================================================================
+# DELETE ATTENDEE
+# =============================================================================
+@login_required
+@require_POST
+def delete_attendee(request, attendee_id):
+    exhibitor = request.user.exhibitor
+    attendee  = get_object_or_404(Attendee, id=attendee_id, exhibitor=exhibitor)
+    
+    try:
+        attendee.delete()
+        return JsonResponse({'success': True, 'message': 'Registration deleted successfully.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

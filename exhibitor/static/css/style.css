@@ -6,6 +6,7 @@
             --sidebar-bg: #1c0627;
             --success-color: #198754;
             --info-color: #0dcaf0;
+            --purple-color:#5b21b6;
             --warning-color: #ffc107;
             --box-shadow: 1px 15px 18px rgb(0 0 0 / 6%);
         }
@@ -795,7 +796,7 @@
 
         /* Badge Stats Card */
         .badge-stats-card {
-            background-image: url(img/banner.jpg);
+            background-image: url("../img/banner.jpg");
             background-repeat: no-repeat;
             background-position: center;
             background-size: cover;
@@ -828,19 +829,19 @@
         .badge-stats-card .stats-number {
             font-size: 32px;
             font-weight: 700;
-            /* color: #ffffff; */
+            color: #ffffff;
             line-height: 1;
         }
 
         .badge-stats-card .stats-number span {
             font-size: 18px;
-            /* color: #ffffff; */
+            color: #ffffff;
             font-weight: 400;
         }
 
         .badge-stats-card .stats-label {
             font-size: 12px;
-            /* color: #ffffff; */
+            color: #ffffff;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -853,7 +854,7 @@
         .badge-stats-card .stats-breakdown span {
             display: block;
             margin-bottom: 2px;
-            /* color: #fff; */
+            color: #fff;
         }
 
         /* Circular Progress */

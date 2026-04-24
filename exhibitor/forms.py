@@ -118,6 +118,7 @@ class CreateBadgeForm(forms.Form):
     )
     last_name = forms.CharField(
         max_length=100,
+        required=False,
         widget=forms.TextInput(attrs={
             "placeholder": "Enter your lastname",
             "class": "form-control",
@@ -126,6 +127,7 @@ class CreateBadgeForm(forms.Form):
     )
     job_title = forms.CharField(
         max_length=255,
+        required=False,
         widget=forms.TextInput(attrs={
             "placeholder": "Enter your job title",
             "class": "form-control",
@@ -134,6 +136,7 @@ class CreateBadgeForm(forms.Form):
     )
     company_name = forms.CharField(
         max_length=255,
+        required=False,
         widget=forms.TextInput(attrs={
             "placeholder": "Enter your company name",
             "class": "form-control",
@@ -164,6 +167,7 @@ class CreateBadgeForm(forms.Form):
     )
     mobile_number = forms.CharField(
         max_length=20,
+        required=False,
         widget=forms.TextInput(attrs={
             "type": "tel",
             "placeholder": "Enter mobile number",
@@ -184,7 +188,7 @@ class CreateBadgeForm(forms.Form):
         error_messages={"required": "You must agree to the Terms & Conditions."},
     )
     accepted_data_sharing = forms.BooleanField(
-        required=True,
+        required=False,
         widget=forms.CheckboxInput(attrs={"class": "form-check-input", "id": "consent2"}),
         error_messages={"required": "You must acknowledge the data sharing notice."},
     )
@@ -203,7 +207,7 @@ class CreateBadgeForm(forms.Form):
 
     def clean_last_name(self):
         value = self.cleaned_data.get("last_name", "").strip()
-        if len(value) < 2:
+        if value and  len(value) < 2:
             raise forms.ValidationError("Last name must be at least 2 characters.")
         if not all(c.isalpha() or c in " -'." for c in value):
             raise forms.ValidationError("Last name should only contain letters.")
