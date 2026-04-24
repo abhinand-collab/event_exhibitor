@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import index,Login,create_single_badge,bulk_upload_preview,bulk_upload_save,validate_email
-from .views import get_columns,bulk_update_session,bulk_task_status,get_attendee,update_attendee,delete_attendee
-
+from .views import get_columns,bulk_update_session,bulk_task_status,get_attendee,update_attendee,delete_attendee,export_registrations
+from .views import send_invitations
 
 urlpatterns=[
     path('',index,name="home"),
@@ -16,4 +16,6 @@ urlpatterns=[
     path('get-attendee/<int:attendee_id>/',    get_attendee,    name='get_attendee'),
     path('update-attendee/<int:attendee_id>/', update_attendee, name='update_attendee'),
     path('delete-attendee/<int:attendee_id>/', delete_attendee, name='delete_attendee'),
+    path("export-registrations/", export_registrations, name="export_registrations"),
+    path('send-invitations/', send_invitations, name='send_invitations'),
 ]

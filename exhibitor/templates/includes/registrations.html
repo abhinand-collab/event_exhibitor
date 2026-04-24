@@ -2,9 +2,9 @@
 <div class="registrations-section animate-fade-in">
     <div class="registrations-header">
         <h5>Registrations</h5>
-        <button class="btn btn-export" id="exportBtn">
-            <i class="fas fa-file-excel me-2"></i>Export to Excel
-        </button>
+        <a href="/export-registrations/" class="btn btn-export" id="exportBtn">
+    <i class="fas fa-file-excel me-2"></i>Export to Excel
+</a>
     </div>
 
     <!-- Filters -->
@@ -175,10 +175,10 @@
     <div class="page-size-selector" style="margin-top: 10px; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
         <label style="color: #6b7280; font-size: 14px; margin: 0;">Show</label>
         <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto; border-radius: 6px;">
-            <option value="10" {% if request.GET.page_size == '10' %}selected{% endif %}>10</option>
-            <option value="25" {% if request.GET.page_size == '25' %}selected{% endif %}>25</option>
-            <option value="50" {% if request.GET.page_size == '50' %}selected{% endif %}>50</option>
-            <option value="100" {% if request.GET.page_size == '100' %}selected{% endif %}>100</option>
+            <option value="10" {% if current_page_size == 10 %}selected{% endif %}>10</option>
+            <option value="25" {% if current_page_size == 25 %}selected{% endif %}>25</option>
+            <option value="50" {% if current_page_size == 50 %}selected{% endif %}>50</option>
+            <option value="100" {% if current_page_size == 100 %}selected{% endif %}>100</option>
         </select>
         <span style="color: #6b7280; font-size: 14px;">entries per page</span>
     </div>

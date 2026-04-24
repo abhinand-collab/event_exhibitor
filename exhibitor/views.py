@@ -19,6 +19,8 @@ from math import ceil
 from django.core.paginator import Paginator
 from .tasks import bulk_upload_save_task
 from celery.result import AsyncResult
+from django.http import HttpResponse
+import openpyxl
 
 
 # =============================================================================
@@ -260,6 +262,15 @@ def _clean(value):
     return str(value).strip() or None
 
 
+def _to_bool(value):
+    """Convert a value to boolean."""
+    if pd.isna(value) or value is None:
+        return False
+    if isinstance(value, bool):
+        return value
+    return str(value).lower() in ("true", "1", "yes", "y", "checked")
+
+
 def _validate_row(row, existing_emails):
     """
     Validate a single spreadsheet row.
@@ -271,6 +282,8 @@ def _validate_row(row, existing_emails):
     email = row.get("email")
     ticket_type = row.get("ticket_type")
     accepted_terms = row.get("accepted_terms")
+    country = row.get("country")
+    nationality = row.get("nationality")
 
     # Required field validations
     if pd.isna(first_name) or not str(first_name).strip():
@@ -284,7 +297,13 @@ def _validate_row(row, existing_emails):
     if not ticket_type or pd.isna(ticket_type):
         errors.append("Ticket type required")
 
-    if pd.isna(accepted_terms) or str(accepted_terms).lower() not in ("true", "1", "yes"):
+    if pd.isna(country) or not str(country).strip():
+        errors.append("Country required")
+
+    if pd.isna(nationality) or not str(nationality).strip():
+        errors.append("Nationality required")
+
+    if not _to_bool(accepted_terms):
         errors.append("Terms must be accepted")
 
     # Note: accepted_data_sharing and accepted_marketing are optional
@@ -311,10 +330,10 @@ def bulk_upload_preview(request):
 
     try:
         # Clear old session data when uploading new file
-        preview_data = request.session.get("bulk_preview_data")
-        if not preview_data:  # Fresh upload
-            if "bulk_preview_data" in request.session:
-                del request.session["bulk_preview_data"]
+        preview_data = None
+
+        if file.name:  # file is present → fresh upload, clear old session
+            request.session.pop("bulk_preview_data", None)
             
             # ── Parse file ──────────────────────────────────────────────────────
             if file.name.endswith(".csv"):
@@ -346,6 +365,8 @@ def bulk_upload_preview(request):
                     "email": row.get("email"),
                     "ticket_type": row.get("ticket_type"),
                     "accepted_terms": row.get("accepted_terms"),
+                    "country": row.get("country"),
+                    "nationality": row.get("nationality"),
                 }
                 errors = _validate_row(row_dict, existing_emails)
                 status = "valid" if not errors else "invalid"
@@ -367,9 +388,11 @@ def bulk_upload_preview(request):
                     "company_name": _clean(row.get("company_name")),
                     "job_title": _clean(row.get("job_title")),
                     "ticket_type": _clean(row.get("ticket_type")),
-                    "accepted_terms": _clean(row.get("accepted_terms")),
-                    "accepted_data_sharing": _clean(row.get("accepted_data_sharing", False)),
-                    "accepted_marketing": _clean(row.get("accepted_marketing", False)),
+                    "accepted_terms": _to_bool(row.get("accepted_terms")),
+                    "accepted_data_sharing": _to_bool(row.get("accepted_data_sharing")),
+                    "accepted_marketing": _to_bool(row.get("accepted_marketing")),
+                    "digital_badge_issued": _to_bool(row.get("digital_badge_issued")),
+                    "onsite_badge_printed": _to_bool(row.get("onsite_badge_printed")),
                     "status": status,
                     "errors": errors,
                 })
@@ -580,6 +603,8 @@ def get_attendee(request, attendee_id):
             'mobile_number'        : attendee.mobile_number or '',
             'job_title'            : attendee.job_title     or '',
             'company_name'         : attendee.company_name  or '',
+            'country_of_residence' : attendee.country_of_residence or '',
+            'nationality'          : attendee.nationality or '',
             'status'               : attendee.status,
             'accepted_terms'       : attendee.accepted_terms,
             'accepted_data_sharing': attendee.accepted_data_sharing,
@@ -606,9 +631,11 @@ def update_attendee(request, attendee_id):
 
     # ── Basic validation ──────────────────────────────────────────────────────
     errors = {}
-    first_name  = data.get('first_name', '').strip()
-    email       = data.get('email', '').strip()
-    ticket_type = data.get('ticket_type', '').strip()
+    first_name   = data.get('first_name', '').strip()
+    email        = data.get('email', '').strip()
+    ticket_type  = data.get('ticket_type', '').strip()
+    country      = data.get('country_of_residence', '').strip()
+    nationality  = data.get('nationality', '').strip()
 
     if not first_name:
         errors['first_name'] = 'First name is required.'
@@ -616,6 +643,10 @@ def update_attendee(request, attendee_id):
         errors['email'] = 'A valid email is required.'
     if not ticket_type:
         errors['ticket_type'] = 'Ticket type is required.'
+    if not country:
+        errors['country_of_residence'] = 'Country of residence is required.'
+    if not nationality:
+        errors['nationality'] = 'Nationality is required.'
 
     # Email uniqueness (exclude self)
     if email and not errors.get('email'):
@@ -629,16 +660,17 @@ def update_attendee(request, attendee_id):
     ticket_class = f"{ticket_type} Pass"
     try:
         with transaction.atomic():
-            attendee.first_name    = first_name
-            attendee.last_name     = data.get('last_name', '').strip()
-            attendee.email         = email
-            attendee.mobile_number = data.get('mobile_number', '').strip() or None
-            attendee.job_title     = data.get('job_title', '').strip()     or None
-            attendee.company_name  = data.get('company_name', '').strip()  or None
-            attendee.status        = data.get('status', attendee.status)
+            attendee.first_name           = first_name
+            attendee.last_name            = data.get('last_name', '').strip()
+            attendee.email                = email
+            attendee.mobile_number        = data.get('mobile_number', '').strip() or None
+            attendee.job_title            = data.get('job_title', '').strip()     or None
+            attendee.company_name         = data.get('company_name', '').strip()  or None
+            attendee.country_of_residence = country
+            attendee.nationality          = nationality
+            attendee.status               = data.get('status', attendee.status)
             attendee.save()
 
-            # Update / create badge safely (OneToOne may raise exception not return None)
             try:
                 badge = attendee.badge
                 badge.badge_type   = ticket_type
@@ -659,10 +691,10 @@ def update_attendee(request, attendee_id):
         'message': 'Registration updated successfully.',
         'attendee': {
             'first_name'    : attendee.first_name,
-            'last_name'     : attendee.last_name,
+            'last_name'     : attendee.last_name     or '',
             'email'         : attendee.email,
-            'job_title'     : attendee.job_title    or '',
-            'company_name'  : attendee.company_name or '',
+            'job_title'     : attendee.job_title     or '',
+            'company_name'  : attendee.company_name  or '',
             'status'        : attendee.status,
             'status_display': attendee.get_status_display(),
             'ticket_class'  : ticket_class,
@@ -684,3 +716,101 @@ def delete_attendee(request, attendee_id):
         return JsonResponse({'success': True, 'message': 'Registration deleted successfully.'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+
+@login_required
+@require_http_methods(["GET"])
+def export_registrations(request):
+    exhibitor = request.user.exhibitor
+    qs = Attendee.objects.filter(exhibitor=exhibitor).select_related("badge").order_by("-id")
+
+    # Apply same filters as index view
+    search = request.GET.get("search", "").strip()
+    status = request.GET.get("status", "").strip()
+    ticket = request.GET.get("ticket_type", "").strip()
+
+    if search:
+        parts = search.split()
+        if len(parts) >= 2:
+            qs = qs.filter(
+                Q(first_name__icontains=parts[0], last_name__icontains=parts[1]) |
+                Q(first_name__icontains=parts[1], last_name__icontains=parts[0]) |
+                Q(job_title__icontains=search) |
+                Q(company_name__icontains=search)
+            )
+        else:
+            qs = qs.filter(
+                Q(first_name__icontains=search) | Q(last_name__icontains=search) |
+                Q(job_title__icontains=search)  | Q(company_name__icontains=search)
+            )
+    if status:
+        qs = qs.filter(status__iexact=status)
+    if ticket:
+        qs = qs.filter(badge__badge_type__iexact=ticket)
+
+    # Build workbook
+    wb = openpyxl       .Workbook()
+    ws = wb.active
+    ws.title = "Registrations"
+
+    headers = [
+        "First Name", "Last Name", "Email", "Job Title", "Company Name",
+        "Source", "Ticket Class", "Ticket ID", "Mobile Number",
+        "Country of Residence", "Nationality",
+        "Digital Badge Issued", "Onsite Badge Printed",
+        "Accepted Terms", "Accepted Data Sharing", "Accepted Marketing",
+        "Status",
+    ]
+    ws.append(headers)
+
+    for reg in qs:
+        badge        = getattr(reg, "badge", None)
+        ticket_class = badge.ticket_class if badge else ""
+        ticket_id    = str(badge.ticket_id) if badge and badge.ticket_id else ""
+        ws.append([
+            reg.first_name,
+            reg.last_name or "",
+            reg.email,
+            reg.job_title or "",
+            reg.company_name or "",
+            reg.source or "",
+            ticket_class,
+            ticket_id,
+            reg.mobile_number or "",
+            reg.country_of_residence or "",
+            reg.nationality or "",
+            "Yes" if reg.digital_badge_issued else "No",
+            "Yes" if reg.onsite_badge_printed else "No",
+            "Yes" if reg.accepted_terms else "No",
+            "Yes" if reg.accepted_data_sharing else "No",
+            "Yes" if reg.accepted_marketing else "No",
+            reg.get_status_display(),
+        ])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="registrations.xlsx"'
+    wb.save(response)
+    return response
+
+@login_required
+@require_POST
+def send_invitations(request):
+    try:
+        data    = json.loads(request.body)
+        entries = data.get('entries', [])
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON.'}, status=400)
+
+    if not entries:
+        return JsonResponse({'success': False, 'error': 'No entries provided.'}, status=400)
+
+    # entries is a list of dicts: first_name, last_name, email, ticket_type
+    # Add your logic here (save to DB, send emails, etc.)
+    print(entries)  # confirm data arrives
+
+    return JsonResponse({
+        'success': True,
+        'message': f'{len(entries)} invitation(s) sent successfully.',
+    })

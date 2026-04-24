@@ -55,6 +55,8 @@ def bulk_upload_save_task(preview_data, exhibitor_id):
                     accepted_terms=row.get("accepted_terms", False),
                     accepted_data_sharing=row.get("accepted_data_sharing", False),
                     accepted_marketing=row.get("accepted_marketing", False),
+                    digital_badge_issued=row.get("digital_badge_issued", False),
+                    onsite_badge_printed=row.get("onsite_badge_printed", False),
                 )
 
                 Badge.objects.create(

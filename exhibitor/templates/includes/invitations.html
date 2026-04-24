@@ -1,0 +1,166 @@
+ <!-- Send Invitation Modal -->
+    <div class="modal fade" id="sendInvitationModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none;">
+                <!-- Header with white theme -->
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">
+                        <i class="fas fa-envelope me-2" style="color: #e74c3c;"></i>Send Invitations
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                
+                <div class="modal-body" style="padding: 25px; background: #f8f9fa;">
+                    <!-- Import from File Banner -->
+                    <div style="background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 18px 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h6 style="color: #333; margin: 0 0 5px 0; font-size: 15px; font-weight: 600;">
+                                <i class="fas fa-file-upload me-2" style="color: #e74c3c;"></i>Import from File
+                            </h6>
+                            <p style="color: #666; margin: 0; font-size: 13px;">
+                                Upload a CSV or Excel file to import multiple contacts at once
+                            </p>
+                        </div>
+                        <input type="file" id="importFileInput" accept=".csv,.xlsx,.xls" style="display: none;">
+                        <button type="button" class="btn" id="importFileBtn" style="background: #e74c3c; color: white; border: none; border-radius: 8px; padding: 8px 20px; font-weight: 500;">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload
+                        </button>
+                    </div>
+                    
+                    <!-- Invitation Entries Form -->
+                    <form id="invitationForm">
+                        <div id="invitationEntries" style="max-height: 295px; overflow-y: auto; padding-right: 10px;">
+                            <!-- Entry Row 1 -->
+                            <div class="invitation-entry-row" style="display: flex; gap: 12px; align-items: center; margin-bottom: 15px;">
+                                <input type="text" class="form-control" placeholder="First Name" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
+                                <input type="text" class="form-control" placeholder="Last Name" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
+                                <input type="email" class="form-control" placeholder="Email" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
+                                <select class="form-select" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
+                                    <option value="">Select Ticket</option>
+                                    <option value="vip">VIP Pass</option>
+                                    <option value="exhibitor">Exhibitor Pass</option>
+                                    <option value="visitor">Visitor Pass</option>
+                                </select>
+                                <button type="button" class="btn btn-link text-danger remove-entry-btn" style="padding: 0; font-size: 18px;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Add Entry Button -->
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-primary" id="addEntryBtn">
+                                <i class="fas fa-plus me-2"></i>Add Entry
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Footer -->
+                <div class="modal-footer border-top" style="background: white; padding: 15px 25px; justify-content: space-between;">
+                    <div>
+                        <button type="button" class="btn px-4 py-2 me-2" id="sendInviteBtn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border-radius: 8px; font-weight: 500;">
+                            <i class="fas fa-paper-plane me-2"></i>Send Invitation
+                        </button>
+                        <button type="button" class="btn px-4 py-2" data-bs-dismiss="modal" style="background: white; color: #333; border: 1px solid #ddd; border-radius: 8px; font-weight: 500;">
+                            <i class="fas fa-times me-2"></i>Close
+                        </button>
+                    </div>
+                    <span style="color: #888; font-size: 13px;">
+                        <i class="fas fa-info-circle me-1"></i>All fields required
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block scripts %}
+
+    <script>
+        // ── Add Entry ────────────────────────────────────────────────
+document.getElementById('addEntryBtn').addEventListener('click', function () {
+    const entryRow = document.createElement('div');
+    entryRow.className = 'invitation-entry-row';
+    entryRow.style.cssText = 'display:flex; gap:12px; align-items:center; margin-bottom:15px;';
+    entryRow.innerHTML = `
+        <input type="text" class="form-control" placeholder="First Name"
+               style="flex:1; border-radius:8px; border:1px solid #ddd; padding:12px 15px;">
+        <input type="text" class="form-control" placeholder="Last Name"
+               style="flex:1; border-radius:8px; border:1px solid #ddd; padding:12px 15px;">
+        <input type="email" class="form-control" placeholder="Email"
+               style="flex:1; border-radius:8px; border:1px solid #ddd; padding:12px 15px;">
+        <select class="form-select"
+                style="flex:1; border-radius:8px; border:1px solid #ddd; padding:12px 15px;">
+            <option value="">Select Ticket</option>
+            <option value="VIP">VIP Pass</option>
+            <option value="EXHIBITOR">Exhibitor Pass</option>
+            <option value="VISITOR">Visitor Pass</option>
+        </select>
+        <button type="button" class="btn btn-link text-danger remove-entry-btn"
+                style="padding:0; font-size:18px;">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    `;
+    document.getElementById('invitationEntries').appendChild(entryRow);
+});
+
+// ── Delete Entry (delegated) ─────────────────────────────────
+document.getElementById('invitationEntries').addEventListener('click', function (e) {
+    const btn = e.target.closest('.remove-entry-btn');
+    if (!btn) return;
+    const rows = document.querySelectorAll('.invitation-entry-row');
+    if (rows.length === 1) return; // keep at least one row
+    btn.closest('.invitation-entry-row').remove();
+});
+
+// ── Send Invitation ──────────────────────────────────────────
+document.getElementById('sendInviteBtn').addEventListener('click', function () {
+    const entries = [];
+    let valid = true;
+
+    document.querySelectorAll('.invitation-entry-row').forEach(function (row) {
+        const inputs = row.querySelectorAll('input, select');
+        const first_name  = inputs[0].value.trim();
+        const last_name   = inputs[1].value.trim();
+        const email       = inputs[2].value.trim();
+        const ticket_type = inputs[3].value;
+
+        // Simple highlight for empty required fields
+        [inputs[0], inputs[2], inputs[3]].forEach(function (inp) {
+            inp.style.borderColor = inp.value.trim() ? '#ddd' : '#e74c3c';
+        });
+
+        if (!first_name || !email || !ticket_type) {
+            valid = false;
+            return;
+        }
+
+        entries.push({ first_name, last_name, email, ticket_type });
+    });
+
+    if (!valid) return;
+
+    fetch('/send-invitations/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+        },
+        body: JSON.stringify({ entries }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(
+                document.getElementById('sendInvitationModal')
+            ).hide();
+            alert(data.message || 'Invitations sent successfully.');
+        } else {
+            alert(data.error || 'Something went wrong.');
+        }
+    })
+    .catch(() => alert('Network error. Please try again.'));
+});
+    </script>
+
+    {% endblock %}

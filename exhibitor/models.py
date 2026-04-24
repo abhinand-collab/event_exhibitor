@@ -111,7 +111,6 @@ class Badge(models.Model):
     )
     attendee = models.OneToOneField(Attendee, on_delete=models.CASCADE, related_name="badge")
     badge_type = models.CharField(max_length=20, choices=BadgeType.choices)
-    ticket_class = models.CharField(max_length=100, blank=True, null=True)
     issued_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

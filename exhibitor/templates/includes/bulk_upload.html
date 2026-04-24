@@ -1,3 +1,4 @@
+{% load static %}
 {# ============================================================ #}
 {#   BULK UPLOAD MODALS + STYLES + SCRIPTS                     #}
 {#   Flow:  Upload → Map columns → Preview (paginated) → Save  #}
@@ -35,9 +36,9 @@
 
         <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
           <span class="text-muted"><i class="fas fa-download me-2"></i>Need the template?</span>
-          <button class="btn btn-sm btn-outline-danger">
+          <a href="{% static 'sample/bulk_upload_template.xlsx' %}" class="btn btn-sm btn-outline-danger" download>
             <i class="fas fa-file-download me-1"></i>Download Template
-          </button>
+          </a>
         </div>
       </div>
 
@@ -132,6 +133,8 @@
                 <th class="bpt-th">TERMS</th>
                 <th class="bpt-th">DATA SHARING</th>
                 <th class="bpt-th">MARKETING</th>
+                <th class="bpt-th">DIGITAL BADGE</th>
+                <th class="bpt-th">ONSITE BADGE</th>
                 <th class="bpt-th">STATUS</th>
               </tr>
             </thead>
@@ -255,6 +258,25 @@
              font-size:14px; background:#fff; }
 .fm-delete { border:none; background:none; color:#e74c3c; cursor:pointer; font-size:14px; }
 .fm-delete:hover { color:#c0392b; }
+/* ── Field-mapping modal scrollable body ── */
+#fieldMappingModal .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+#fieldMappingModal .modal-dialog {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#fieldMappingModal .modal-content {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 </style>
 
 <script>
@@ -353,7 +375,8 @@ document.getElementById("uploadBulkBtn").addEventListener("click", () => {
 const SYSTEM_FIELDS = [
   "first_name", "last_name", "email", "mobile_number",
   "country", "nationality", "company_name", "job_title",
-  "ticket_type", "accepted_terms",
+  "ticket_type", "accepted_terms", "accepted_data_sharing",
+  "accepted_marketing", "digital_badge_issued", "onsite_badge_printed",
 ];
 
 function toLabel(str) {
@@ -476,11 +499,13 @@ function updateRowFromData(row, data) {
   if (data.accepted_terms !== undefined) row.children[10].querySelector("input").checked = data.accepted_terms;
   if (data.accepted_data_sharing !== undefined) row.children[11].querySelector("input").checked = data.accepted_data_sharing;
   if (data.accepted_marketing !== undefined) row.children[12].querySelector("input").checked = data.accepted_marketing;
+  if (data.digital_badge_issued !== undefined) row.children[13].querySelector("input").checked = data.digital_badge_issued;
+  if (data.onsite_badge_printed !== undefined) row.children[14].querySelector("input").checked = data.onsite_badge_printed;
   
   // Update status if provided
   if (data.status) {
     row.dataset.bpstatus = data.status;
-    const pill = row.children[13].querySelector(".bpt-status");
+    const pill = row.children[15].querySelector(".bpt-status");
     pill.className = `bpt-status ${data.status === 'valid' ? 'bpt-s-valid' : 'bpt-s-invalid'}`;
     pill.textContent = data.status;
     row.classList.toggle("bpt-row-invalid", data.status !== 'valid');
@@ -506,59 +531,70 @@ function renderPreviewTable(rows) {
   tbody.innerHTML = "";
 
   rows.forEach(r => {
-    const isInvalid = r.status === "invalid";
-    const err = msg => r.errors.includes(msg) ? `<div class="bpt-error">${msg}</div>` : "";
-    const cls = msg => r.errors.includes(msg) ? "bpt-input-err" : "";
+  const isInvalid = r.status === "invalid";
+  const err = msg => r.errors.includes(msg) ? `<div class="bpt-error">${msg}</div>` : "";
+  const cls = msg => r.errors.includes(msg) ? "bpt-input-err" : "";
 
-    const tr = document.createElement("tr");
-    tr.className        = `bpt-row ${isInvalid ? "bpt-row-invalid" : ""}`;
-    tr.dataset.bpstatus = r.status;
-    tr.dataset.rowId    = r.id;  // Store row ID for tracking
+  const tr = document.createElement("tr");
+  tr.className        = `bpt-row ${isInvalid ? "bpt-row-invalid" : ""}`;
+  tr.dataset.bpstatus = r.status;
+  tr.dataset.rowId    = r.id;  // Store row ID for tracking
 
-    tr.innerHTML = `
-      <td class="bpt-td" style="color:#888;font-weight:600;">${r.row}</td>
-      <td class="bpt-td">
-        <input class="bpt-input ${cls('First name required')}" value="${escapeHtml(r.first_name || '')}">
-        ${err('First name required')}
-      </td>
-      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.last_name || '')}"></td>
-      <td class="bpt-td">
-        <input class="bpt-input ${cls('Invalid email')}" value="${escapeHtml(r.email || '')}">
-        ${err('Invalid email')}${err('Email already exists')}
-      </td>
-      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.mobile_number || '')}"></td>
-      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.country || '')}"></td>
-      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.nationality || '')}"></td>
-      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.company_name || '')}"></td>
-      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.job_title || '')}"></td>
-      <td class="bpt-td">
-        <select class="bpt-input bpt-ticket-type">
-          <option value="">Select</option>
-          <option value="VIP"       ${r.ticket_type === "VIP" ? "selected" : ""}>VIP</option>
-          <option value="VISITOR"   ${r.ticket_type === "VISITOR" ? "selected" : ""}>Visitor</option>
-          <option value="EXHIBITOR" ${r.ticket_type === "EXHIBITOR" ? "selected" : ""}>Exhibitor</option>
-        </select>
-        ${err('Ticket type required')}
-      </td>
-      <td class="bpt-td text-center">
-        <input type="checkbox" ${r.accepted_terms ? "checked" : ""}>
-      </td>
-      <td class="bpt-td text-center">
-        <input type="checkbox" ${r.accepted_data_sharing ? "checked" : ""}>
-      </td>
-      <td class="bpt-td text-center">
-        <input type="checkbox" ${r.accepted_marketing ? "checked" : ""}>
-      </td>
-      <td class="bpt-td">
-        <span class="bpt-status ${isInvalid ? 'bpt-s-invalid' : 'bpt-s-valid'}">
-          ${r.status}
-        </span>
-        <button class="btn btn-sm btn-outline-primary check-row-btn ms-1">✔ Check</button>
-      </td>`;
+  tr.innerHTML = `
+    <td class="bpt-td" style="color:#888;font-weight:600;">${r.row}</td>
+    <td class="bpt-td">
+      <input class="bpt-input ${cls('First name required')}" value="${escapeHtml(r.first_name || '')}">
+      ${err('First name required')}
+    </td>
+    <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.last_name || '')}"></td>
+    <td class="bpt-td">
+      <input class="bpt-input ${cls('Invalid email')}" value="${escapeHtml(r.email || '')}">
+      ${err('Invalid email')}${err('Email already exists')}
+    </td>
+    <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.mobile_number || '')}"></td>
+    <td class="bpt-td">
+      <input class="bpt-input ${cls('Country required')}" value="${escapeHtml(r.country || '')}">
+      ${err('Country required')}
+    </td>
+    <td class="bpt-td">
+      <input class="bpt-input ${cls('Nationality required')}" value="${escapeHtml(r.nationality || '')}">
+      ${err('Nationality required')}
+    </td>
+    <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.company_name || '')}"></td>
+    <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.job_title || '')}"></td>
+    <td class="bpt-td">
+      <select class="bpt-input bpt-ticket-type">
+        <option value="">Select</option>
+        <option value="VIP"       ${r.ticket_type === "VIP" ? "selected" : ""}>VIP</option>
+        <option value="VISITOR"   ${r.ticket_type === "VISITOR" ? "selected" : ""}>Visitor</option>
+        <option value="EXHIBITOR" ${r.ticket_type === "EXHIBITOR" ? "selected" : ""}>Exhibitor</option>
+      </select>
+      ${err('Ticket type required')}
+    </td>
+    <td class="bpt-td text-center">
+      <input type="checkbox" ${r.accepted_terms ? "checked" : ""}>
+    </td>
+    <td class="bpt-td text-center">
+      <input type="checkbox" ${r.accepted_data_sharing ? "checked" : ""}>
+    </td>
+    <td class="bpt-td text-center">
+      <input type="checkbox" ${r.accepted_marketing ? "checked" : ""}>
+    </td>
+    <td class="bpt-td text-center">
+      <input type="checkbox" ${r.digital_badge_issued ? "checked" : ""}>
+    </td>
+    <td class="bpt-td text-center">
+      <input type="checkbox" ${r.onsite_badge_printed ? "checked" : ""}>
+    </td>
+    <td class="bpt-td">
+      <span class="bpt-status ${isInvalid ? 'bpt-s-invalid' : 'bpt-s-valid'}">
+        ${r.status}
+      </span>
+      <button class="btn btn-sm btn-outline-primary check-row-btn ms-1">✔ Check</button>
+    </td>`;
 
-    tbody.appendChild(tr);
+  tbody.appendChild(tr);
   });
-  
   // Attach event listeners to new rows
   attachRowEventListeners();
 }
@@ -607,6 +643,8 @@ const handleRowChange = debounce(async function() {
     accepted_terms: row.children[10].querySelector("input").checked,
     accepted_data_sharing: row.children[11].querySelector("input").checked,
     accepted_marketing: row.children[12].querySelector("input").checked,
+    digital_badge_issued: row.children[13].querySelector("input").checked,
+    onsite_badge_printed: row.children[14].querySelector("input").checked,
   };
   
   // Store in Map
@@ -758,6 +796,8 @@ document.addEventListener("click", async e => {
   const rowId      = parseInt(tr.dataset.rowId);
   const first_name = tr.children[1].querySelector("input").value.trim();
   const email      = tr.children[3].querySelector("input").value.trim();
+  const country    = tr.children[5].querySelector("input").value.trim();
+  const nationality= tr.children[6].querySelector("input").value.trim();
   const termsOk    = tr.children[10].querySelector("input").checked;
   const ticketType = tr.children[9].querySelector("select").value;
 
@@ -768,6 +808,8 @@ document.addEventListener("click", async e => {
   const errors = [];
   if (!first_name) errors.push("First name required");
   if (!email || !email.includes("@")) errors.push("Invalid email");
+  if (!country) errors.push("Country required");
+  if (!nationality) errors.push("Nationality required");
   if (!ticketType) errors.push("Ticket type required");
   if (!termsOk) errors.push("Terms must be accepted");
 
@@ -790,6 +832,16 @@ document.addEventListener("click", async e => {
       .filter(e => ["Invalid email", "Email already exists"].includes(e))
       .forEach(msg => td.insertAdjacentHTML("beforeend", `<div class="bpt-error">${msg}</div>`));
   }
+  if (errors.includes("Country required")) {
+    const td = tr.children[5];
+    td.querySelector("input").classList.add("bpt-input-err");
+    td.insertAdjacentHTML("beforeend", `<div class="bpt-error">Country required</div>`);
+  }
+  if (errors.includes("Nationality required")) {
+    const td = tr.children[6];
+    td.querySelector("input").classList.add("bpt-input-err");
+    td.insertAdjacentHTML("beforeend", `<div class="bpt-error">Nationality required</div>`);
+  }
   if (errors.includes("Ticket type required")) {
     const td = tr.children[9];
     td.querySelector("select").classList.add("bpt-input-err");
@@ -805,8 +857,8 @@ document.addEventListener("click", async e => {
   tr.dataset.bpstatus = isValid ? "valid" : "invalid";
   tr.classList.toggle("bpt-row-invalid", !isValid);
 
-  // Update status pill (column index 13)
-  const pill       = tr.children[13].querySelector(".bpt-status");
+  // Update status pill (column index 15)
+  const pill       = tr.children[15].querySelector(".bpt-status");
   pill.className   = `bpt-status ${isValid ? "bpt-s-valid" : "bpt-s-invalid"}`;
   pill.textContent = isValid ? "valid" : "invalid";
   recalculateTabCounts()

@@ -184,41 +184,7 @@
 <!-- Bulk Upload Modal -->
 {% include 'includes/bulk_upload.html' %}
 
-<!-- Send Invitation Modal -->
-<div class="modal fade" id="sendInvitationModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none;">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title">
-                    <i class="fas fa-envelope me-2" style="color: #e74c3c;"></i>Send Invitations
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            
-            <div class="modal-body" style="padding: 25px; background: #f8f9fa;">
-                <form id="invitationForm">
-                    <div id="invitationEntries">
-                        <div class="invitation-entry-row" style="display: flex; gap: 12px; align-items: center; margin-bottom: 15px;">
-                            <input type="text" class="form-control" placeholder="First Name" style="flex: 1;">
-                            <input type="text" class="form-control" placeholder="Last Name" style="flex: 1;">
-                            <input type="email" class="form-control" placeholder="Email" style="flex: 1;">
-                            <select class="form-select" style="flex: 1;">
-                                <option value="">Select Ticket</option>
-                                <option value="VIP">VIP Pass</option>
-                                <option value="exhibitor">Exhibitor Pass</option>
-                                <option value="visitor">Visitor Pass</option>
-                            </select>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="sendInviteBtn">Send Invitation</button>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'includes/invitations.html' %}
 
 <!-- Send Email Confirmation Modal -->
 <div class="modal fade" id="sendEmailModal" tabindex="-1">
@@ -327,6 +293,18 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Country of Residence <span class="text-danger">*</span></label>
+                            <input type="text" id="editCountryResidence" name="country_of_residence" class="form-control" placeholder="Enter country of residence" required>
+                            <div class="text-danger mt-1 small" id="editCountryResidenceError" style="display:none;"></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Nationality <span class="text-danger">*</span></label>
+                            <input type="text" id="editNationality" name="nationality" class="form-control" placeholder="Enter nationality" required>
+                            <div class="text-danger mt-1 small" id="editNationalityError" style="display:none;"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Ticket Type <span class="text-danger">*</span></label>
                             <select id="editTicketType" name="ticket_type" class="form-select">
                                 <option value="">Select Ticket Type</option>
@@ -365,9 +343,11 @@
 <script>
 // ── Field → error element map ─────────────────────────────────────────────────
 const editFieldErrorMap = {
-    first_name  : 'editFirstNameError',
-    email       : 'editEmailError',
-    ticket_type : 'editTicketTypeError',
+    first_name           : 'editFirstNameError',
+    email                : 'editEmailError',
+    ticket_type          : 'editTicketTypeError',
+    country_of_residence : 'editCountryResidenceError',
+    nationality          : 'editNationalityError',
 };
 
 // ── Store fetched data here, apply after modal is visible ─────────────────────
@@ -411,6 +391,8 @@ document.getElementById('editBadgeModal').addEventListener('shown.bs.modal', fun
     document.getElementById('editCompanyName').value  = a.company_name  || '';
     document.getElementById('editEmail').value        = a.email         || '';
     document.getElementById('editMobileNumber').value = a.mobile_number || '';
+    document.getElementById('editCountryResidence').value = a.country_of_residence || '';
+    document.getElementById('editNationality').value      = a.nationality || '';
     document.getElementById('editTicketType').value   = a.ticket_type   || '';
     document.getElementById('editStatus').value       = a.status        || 'PENDING';
 });
@@ -428,6 +410,8 @@ document.getElementById('saveEditBtn').addEventListener('click', function () {
         company_name : document.getElementById('editCompanyName').value.trim(),
         email        : document.getElementById('editEmail').value.trim(),
         mobile_number: document.getElementById('editMobileNumber').value.trim(),
+        country_of_residence : document.getElementById('editCountryResidence').value,
+        nationality          : document.getElementById('editNationality').value,
         ticket_type  : document.getElementById('editTicketType').value,
         status       : document.getElementById('editStatus').value,
     };
@@ -455,9 +439,11 @@ document.getElementById('saveEditBtn').addEventListener('click', function () {
                 Object.entries(body.errors).forEach(([field, msg]) => {
                     const errEl = document.getElementById(editFieldErrorMap[field]);
                     const inputEl = document.getElementById({
-                        first_name  : 'editFirstName',
-                        email       : 'editEmail',
-                        ticket_type : 'editTicketType',
+                        first_name           : 'editFirstName',
+                        email                : 'editEmail',
+                        ticket_type          : 'editTicketType',
+                        country_of_residence : 'editCountryResidence',
+                        nationality          : 'editNationality',
                     }[field]);
 
                     if (errEl) {
@@ -627,5 +613,82 @@ function updatePaginationInfo() {
 
     infoEl.textContent = `Showing ${start} to ${end} of ${total} entries`;
 }
+
+// ═══════════════════════════════════════════
+//  FILTERS & PAGINATION
+// ═══════════════════════════════════════════
+$(document).ready(function() {
+    const searchInput = $('#searchKeyword');
+    const statusSelect = $('#filterStatus');
+    const ticketSelect = $('#filterTickets');
+    const pageSizeSelect = $('#pageSizeSelect');
+    const applyBtn = $('#applyFiltersBtn');
+    const clearBtn = $('#clearFiltersBtn');
+
+    // Pre-fill from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('search')) searchInput.val(urlParams.get('search'));
+    if (urlParams.has('status')) statusSelect.val(urlParams.get('status')).trigger('change');
+    if (urlParams.has('ticket_type')) ticketSelect.val(urlParams.get('ticket_type')).trigger('change');
+
+    function applyFilters() {
+        const params = new URLSearchParams();
+        const search = searchInput.val().trim();
+        const status = statusSelect.val();
+        const ticket = ticketSelect.val();
+        const pageSize = pageSizeSelect.val();
+
+        if (search) params.set('search', search);
+        if (status) params.set('status', status);
+        if (ticket) params.set('ticket_type', ticket);
+        if (pageSize && pageSize !== '10') params.set('page_size', pageSize);
+
+        window.location.href = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+    }
+
+    applyBtn.click(applyFilters);
+
+    searchInput.keypress(function(e) {
+        if (e.which == 13) {
+            applyFilters();
+        }
+    });
+
+    clearBtn.click(function() {
+        window.location.href = window.location.pathname;
+    });
+
+    pageSizeSelect.change(applyFilters);
+
+    // Handle pagination clicks to preserve filters
+    $('.pagination .page-link').click(function(e) {
+        const href = $(this).attr('href');
+        if (href && href.includes('page=')) {
+            e.preventDefault();
+            const urlParams = new URLSearchParams(window.location.search);
+            const linkParams = new URLSearchParams(href.substring(href.indexOf('?')));
+            
+            // Update page parameter from the link
+            if (linkParams.has('page')) {
+                urlParams.set('page', linkParams.get('page'));
+            }
+            
+            window.location.href = window.location.pathname + '?' + urlParams.toString();
+        }
+    });
+});
+// Keep export link in sync with active filters
+function syncExportLink() {
+    const params = new URLSearchParams(window.location.search);
+    // Drop pagination params — export should return ALL filtered rows
+    params.delete('page');
+    params.delete('page_size');
+    const qs = params.toString();
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.href = '/export-registrations/' + (qs ? '?' + qs : '');
+    }
+}
+syncExportLink();
 </script>
 {% endblock %}
