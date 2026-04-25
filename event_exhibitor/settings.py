@@ -125,3 +125,13 @@ CELERY_TASK_SERIALIZER = 'json'
 
 # Optional (for results)
 CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = "abhinandveuz@gmail.com"
+EMAIL_HOST_PASSWORD = "rule eyfu wqli ocsm"  
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

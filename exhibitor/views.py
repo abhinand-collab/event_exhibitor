@@ -17,7 +17,7 @@ from .forms import CreateBadgeForm
 from .models import User, Exhibitor, Event, Badge, Attendee
 from math import ceil
 from django.core.paginator import Paginator
-from .tasks import bulk_upload_save_task
+from .tasks import bulk_upload_save_task,send_invite_email
 from celery.result import AsyncResult
 from django.http import HttpResponse
 import openpyxl
@@ -806,11 +806,111 @@ def send_invitations(request):
     if not entries:
         return JsonResponse({'success': False, 'error': 'No entries provided.'}, status=400)
 
-    # entries is a list of dicts: first_name, last_name, email, ticket_type
-    # Add your logic here (save to DB, send emails, etc.)
-    print(entries)  # confirm data arrives
+    created_count = 0
+    errors = []
+
+    exhibitor = request.user.exhibitor
+    event = exhibitor.event
+    for entry in entries:
+        try:
+            first_name = entry.get("first_name")
+            last_name = entry.get("last_name")
+            email = entry.get("email")
+            attendee_type = entry.get("ticket_type")  # match your frontend key
+
+            # Basic validation
+            if not first_name or not email or not attendee_type:
+                errors.append(f"Missing fields for {email}")
+                continue
+
+            attendee = Attendee.objects.create(
+                event=event,
+                exhibitor=exhibitor,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                attendee_type=attendee_type,
+                status=Attendee.Status.INVITED,
+            )
+
+            # ✅ Send email (Celery)
+            send_invite_email.delay(attendee.email, str(attendee.invite_token))
+
+            created_count += 1
+
+        except IntegrityError:
+            errors.append(f"Duplicate email: {email}")
+        except Exception as e:
+            errors.append(f"{email}: {str(e)}")
+    
+    print(errors)
 
     return JsonResponse({
         'success': True,
         'message': f'{len(entries)} invitation(s) sent successfully.',
+    })
+
+
+
+def register_attendee(request, token):
+    attendee = get_object_or_404(Attendee, invite_token=token)
+ 
+    # Already confirmed — render the template (it will show the success screen)
+    if attendee.status == Attendee.Status.CONFIRMED:
+        return render(request, "invite_registration.html", {"attendee": attendee})
+ 
+    errors = []
+ 
+    if request.method == "POST":
+        mobile      = request.POST.get("mobile", "").strip()
+        company     = request.POST.get("company", "").strip()
+        country     = request.POST.get("country", "").strip()
+        nationality = request.POST.get("nationality", "").strip()
+        job_title   = request.POST.get("job_title", "").strip()
+ 
+        # Checkbox values — present in POST only when checked
+        accepted_terms        = bool(request.POST.get("accepted_terms"))
+        accepted_data_sharing = bool(request.POST.get("accepted_data_sharing"))
+        accepted_marketing    = bool(request.POST.get("accepted_marketing"))
+ 
+        # ── Server-side validation ──────────────────────────────────────────
+        if not mobile:
+            errors.append("Mobile number is required.")
+        if not company:
+            errors.append("Company name is required.")
+        if not country:
+            errors.append("Country of residence is required.")
+        if not nationality:
+            errors.append("Nationality is required.")
+        if not accepted_terms:
+            errors.append("You must accept the Terms & Conditions.")
+        if not accepted_data_sharing:
+            errors.append("Consent to data sharing is required.")
+ 
+        if not errors:
+            attendee.mobile_number        = mobile
+            attendee.company_name         = company
+            attendee.country_of_residence = country
+            attendee.nationality          = nationality
+            attendee.job_title            = job_title
+            attendee.accepted_terms       = accepted_terms
+            attendee.accepted_data_sharing = accepted_data_sharing
+            attendee.accepted_marketing   = accepted_marketing
+            attendee.source               = "Invitation Portal"
+            attendee.status               = Attendee.Status.CONFIRMED
+            attendee.save()
+ 
+            # Create badge
+            Badge.objects.create(
+                attendee=attendee,
+                badge_type=attendee.attendee_type,
+            )
+ 
+            # Re-render the same template — JS will switch to success screen
+            # because attendee.status is now CONFIRMED
+            return render(request, "invite_registration.html", {"attendee": attendee})
+ 
+    return render(request, "invite_registration.html", {
+        "attendee": attendee,
+        "errors": errors,
     })

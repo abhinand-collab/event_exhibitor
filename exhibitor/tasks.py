@@ -1,6 +1,8 @@
 from celery import shared_task
 from django.db import transaction,IntegrityError
 from .models import Attendee, Badge, Exhibitor
+from django.core.mail import send_mail
+
 
 
 @shared_task
@@ -78,3 +80,14 @@ def bulk_upload_save_task(preview_data, exhibitor_id):
         "skipped": skipped,
         "total_valid": len(valid_rows),
     }
+
+@shared_task
+def send_invite_email(email, token):
+    link = f"http://127.0.0.1:8000/register/{token}/"
+
+    send_mail(
+        subject="You're Invited!",
+        message=f"Click to register: {link}",
+        from_email="abhinand@veuz.in",
+        recipient_list=[email],
+    )

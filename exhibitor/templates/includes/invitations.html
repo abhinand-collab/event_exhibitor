@@ -1,144 +1,224 @@
- <!-- Send Invitation Modal -->
-    <div class="modal fade" id="sendInvitationModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none;">
-                <!-- Header with white theme -->
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title">
-                        <i class="fas fa-envelope me-2" style="color: #e74c3c;"></i>Send Invitations
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                
-                <div class="modal-body" style="padding: 25px; background: #f8f9fa;">
-                    <!-- Import from File Banner -->
-                    <div style="background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 18px 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h6 style="color: #333; margin: 0 0 5px 0; font-size: 15px; font-weight: 600;">
-                                <i class="fas fa-file-upload me-2" style="color: #e74c3c;"></i>Import from File
-                            </h6>
-                            <p style="color: #666; margin: 0; font-size: 13px;">
-                                Upload a CSV or Excel file to import multiple contacts at once
-                            </p>
-                        </div>
-                        <input type="file" id="importFileInput" accept=".csv,.xlsx,.xls" style="display: none;">
-                        <button type="button" class="btn" id="importFileBtn" style="background: #e74c3c; color: white; border: none; border-radius: 8px; padding: 8px 20px; font-weight: 500;">
-                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload
-                        </button>
-                    </div>
-                    
-                    <!-- Invitation Entries Form -->
-                    <form id="invitationForm">
-                        <div id="invitationEntries" style="max-height: 295px; overflow-y: auto; padding-right: 10px;">
-                            <!-- Entry Row 1 -->
-                            <div class="invitation-entry-row" style="display: flex; gap: 12px; align-items: center; margin-bottom: 15px;">
-                                <input type="text" class="form-control" placeholder="First Name" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
-                                <input type="text" class="form-control" placeholder="Last Name" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
-                                <input type="email" class="form-control" placeholder="Email" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
-                                <select class="form-select" style="flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 12px 15px;">
-                                    <option value="">Select Ticket</option>
-                                    <option value="vip">VIP Pass</option>
-                                    <option value="exhibitor">Exhibitor Pass</option>
-                                    <option value="visitor">Visitor Pass</option>
-                                </select>
-                                <button type="button" class="btn btn-link text-danger remove-entry-btn" style="padding: 0; font-size: 18px;">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Add Entry Button -->
-                        <div class="text-center mt-3">
-                            <button type="button" class="btn btn-primary" id="addEntryBtn">
-                                <i class="fas fa-plus me-2"></i>Add Entry
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                
-                <!-- Footer -->
-                <div class="modal-footer border-top" style="background: white; padding: 15px 25px; justify-content: space-between;">
+<!-- Send Invitation Modal -->
+<div class="modal fade" id="sendInvitationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none;">
+
+            <!-- Header -->
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title">
+                    <i class="fas fa-envelope me-2" style="color: #e74c3c;"></i>Send Invitations
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" style="padding: 25px; background: #f8f9fa;">
+
+                <!-- Import from File Banner -->
+                <div style="background:#fff; border:1px solid #ddd; border-radius:10px; padding:18px 20px; margin-bottom:25px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <button type="button" class="btn px-4 py-2 me-2" id="sendInviteBtn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border-radius: 8px; font-weight: 500;">
-                            <i class="fas fa-paper-plane me-2"></i>Send Invitation
-                        </button>
-                        <button type="button" class="btn px-4 py-2" data-bs-dismiss="modal" style="background: white; color: #333; border: 1px solid #ddd; border-radius: 8px; font-weight: 500;">
-                            <i class="fas fa-times me-2"></i>Close
-                        </button>
+                        <h6 style="color:#333; margin:0 0 5px 0; font-size:15px; font-weight:600;">
+                            <i class="fas fa-file-upload me-2" style="color:#e74c3c;"></i>Import from File
+                        </h6>
+                        <p style="color:#666; margin:0; font-size:13px;">
+                            Upload a CSV or Excel file to import multiple contacts at once
+                        </p>
                     </div>
-                    <span style="color: #888; font-size: 13px;">
-                        <i class="fas fa-info-circle me-1"></i>All fields required
-                    </span>
+                    <input type="file" id="importFileInput" accept=".csv,.xlsx,.xls" style="display:none;">
+                    <button type="button" id="importFileBtn"
+                            style="background:#e74c3c; color:white; border:none; border-radius:8px; padding:8px 20px; font-weight:500; cursor:pointer;">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload
+                    </button>
                 </div>
+
+                <!-- Global alert (shown on errors / success) -->
+                <div id="inviteAlert" style="display:none; border-radius:8px; padding:12px 16px; margin-bottom:18px; font-size:13px; display:none; align-items:flex-start; gap:10px;"></div>
+
+                <!-- Invitation Entries -->
+                <div id="invitationEntries"
+                     style="max-height:310px; overflow-y:auto; padding-right:6px;">
+
+                    <!-- first row injected by JS so template stays DRY -->
+
+                </div>
+
+                <!-- Add Entry -->
+                <div class="text-center mt-3">
+                    <button type="button" id="addEntryBtn"
+                            style="background:#1a56db; color:white; border:none; border-radius:8px; padding:9px 22px; font-weight:500; cursor:pointer;">
+                        <i class="fas fa-plus me-2"></i>Add Another
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer border-top"
+                 style="background:white; padding:15px 25px; justify-content:space-between;">
+                <div>
+                    <button type="button" id="sendInviteBtn"
+                            style="background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%); color:white; border:none; border-radius:8px; padding:9px 22px; font-weight:500; margin-right:8px; cursor:pointer;">
+                        <i class="fas fa-paper-plane me-2"></i>Send Invitation
+                    </button>
+                    <button type="button" class="btn" data-bs-dismiss="modal"
+                            style="background:white; color:#333; border:1px solid #ddd; border-radius:8px; padding:9px 22px; font-weight:500;">
+                        <i class="fas fa-times me-2"></i>Close
+                    </button>
+                </div>
+                <span style="color:#888; font-size:13px;">
+                    <i class="fas fa-info-circle me-1"></i>All fields required
+                </span>
             </div>
         </div>
     </div>
+</div>
 
-    {% block scripts %}
 
-    <script>
-        // ── Add Entry ────────────────────────────────────────────────
-document.getElementById('addEntryBtn').addEventListener('click', function () {
-    const entryRow = document.createElement('div');
-    entryRow.className = 'invitation-entry-row';
-    entryRow.style.cssText = 'display:flex; gap:12px; align-items:center; margin-bottom:15px;';
-    entryRow.innerHTML = `
-        <input type="text" class="form-control" placeholder="First Name"
-               style="flex:1; border-radius:8px; border:1px solid #ddd; padding:12px 15px;">
-        <input type="text" class="form-control" placeholder="Last Name"
-               style="flex:1; border-radius:8px; border:1px solid #ddd; padding:12px 15px;">
-        <input type="email" class="form-control" placeholder="Email"
-               style="flex:1; border-radius:8px; border:1px solid #ddd; padding:12px 15px;">
-        <select class="form-select"
-                style="flex:1; border-radius:8px; border:1px solid #ddd; padding:12px 15px;">
-            <option value="">Select Ticket</option>
-            <option value="VIP">VIP Pass</option>
-            <option value="EXHIBITOR">Exhibitor Pass</option>
-            <option value="VISITOR">Visitor Pass</option>
-        </select>
-        <button type="button" class="btn btn-link text-danger remove-entry-btn"
-                style="padding:0; font-size:18px;">
+<script>
+// ─── Row Template ────────────────────────────────────────────────────────────
+function createEntryRow() {
+    const row = document.createElement('div');
+    row.className = 'invitation-entry-row';
+    row.style.cssText = 'display:flex; gap:10px; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap;';
+    row.innerHTML = `
+        <div style="flex:1; min-width:110px;">
+            <input type="text" class="form-control inv-first-name" placeholder="First Name"
+                   style="border-radius:8px; border:1.5px solid #ddd; padding:10px 13px; width:100%;">
+            <div class="inv-err inv-err-first" style="color:#e74c3c; font-size:11px; margin-top:3px; display:none;"></div>
+        </div>
+        <div style="flex:1; min-width:110px;">
+            <input type="text" class="form-control inv-last-name" placeholder="Last Name"
+                   style="border-radius:8px; border:1.5px solid #ddd; padding:10px 13px; width:100%;">
+        </div>
+        <div style="flex:1.4; min-width:150px;">
+            <input type="email" class="form-control inv-email" placeholder="Email Address"
+                   style="border-radius:8px; border:1.5px solid #ddd; padding:10px 13px; width:100%;">
+            <div class="inv-err inv-err-email" style="color:#e74c3c; font-size:11px; margin-top:3px; display:none;"></div>
+        </div>
+        <div style="flex:1; min-width:130px;">
+            <select class="form-select inv-ticket"
+                    style="border-radius:8px; border:1.5px solid #ddd; padding:10px 13px; width:100%;">
+                <option value="">Select Ticket</option>
+                <option value="VIP">VIP Pass</option>
+                <option value="EXHIBITOR">Exhibitor Pass</option>
+                <option value="VISITOR">Visitor Pass</option>
+            </select>
+            <div class="inv-err inv-err-ticket" style="color:#e74c3c; font-size:11px; margin-top:3px; display:none;"></div>
+        </div>
+        <button type="button" class="remove-entry-btn"
+                style="background:none; border:none; color:#e74c3c; font-size:17px; cursor:pointer; padding:10px 4px; flex-shrink:0;"
+                title="Remove row">
             <i class="fas fa-trash-alt"></i>
         </button>
     `;
-    document.getElementById('invitationEntries').appendChild(entryRow);
+    return row;
+}
+
+// ─── Init: render first row on DOMContentLoaded ───────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    const container = document.getElementById('invitationEntries');
+    container.appendChild(createEntryRow());
 });
 
-// ── Delete Entry (delegated) ─────────────────────────────────
+// ─── Reset modal when it opens ────────────────────────────────────────────────
+document.getElementById('sendInvitationModal')
+    .addEventListener('show.bs.modal', function () {
+        const container = document.getElementById('invitationEntries');
+        container.innerHTML = '';
+        container.appendChild(createEntryRow());
+        hideInviteAlert();
+    });
+
+// ─── Add row ──────────────────────────────────────────────────────────────────
+document.getElementById('addEntryBtn').addEventListener('click', function () {
+    document.getElementById('invitationEntries').appendChild(createEntryRow());
+    // Scroll to bottom
+    const c = document.getElementById('invitationEntries');
+    c.scrollTop = c.scrollHeight;
+});
+
+// ─── Remove row (delegated) ───────────────────────────────────────────────────
 document.getElementById('invitationEntries').addEventListener('click', function (e) {
     const btn = e.target.closest('.remove-entry-btn');
     if (!btn) return;
     const rows = document.querySelectorAll('.invitation-entry-row');
-    if (rows.length === 1) return; // keep at least one row
+    if (rows.length === 1) return;        // keep at least one
     btn.closest('.invitation-entry-row').remove();
 });
 
-// ── Send Invitation ──────────────────────────────────────────
+// ─── File import ──────────────────────────────────────────────────────────────
+document.getElementById('importFileBtn').addEventListener('click', function () {
+    document.getElementById('importFileInput').click();
+});
+document.getElementById('importFileInput').addEventListener('change', function () {
+    if (!this.files.length) return;
+    // Placeholder: wire up your own CSV/Excel parsing here
+    showInviteAlert('info', `<i class="fas fa-file-alt me-2"></i>File "<strong>${this.files[0].name}</strong>" selected. Parsing not yet implemented — entries will be added manually.`);
+    this.value = '';   // reset so the same file can be re-selected
+});
+
+// ─── Validate & send ──────────────────────────────────────────────────────────
 document.getElementById('sendInviteBtn').addEventListener('click', function () {
+    hideInviteAlert();
+
     const entries = [];
     let valid = true;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     document.querySelectorAll('.invitation-entry-row').forEach(function (row) {
-        const inputs = row.querySelectorAll('input, select');
-        const first_name  = inputs[0].value.trim();
-        const last_name   = inputs[1].value.trim();
-        const email       = inputs[2].value.trim();
-        const ticket_type = inputs[3].value;
+        const firstName  = row.querySelector('.inv-first-name');
+        const lastName   = row.querySelector('.inv-last-name');
+        const emailEl    = row.querySelector('.inv-email');
+        const ticketEl   = row.querySelector('.inv-ticket');
 
-        // Simple highlight for empty required fields
-        [inputs[0], inputs[2], inputs[3]].forEach(function (inp) {
-            inp.style.borderColor = inp.value.trim() ? '#ddd' : '#e74c3c';
-        });
+        const errFirst  = row.querySelector('.inv-err-first');
+        const errEmail  = row.querySelector('.inv-err-email');
+        const errTicket = row.querySelector('.inv-err-ticket');
 
-        if (!first_name || !email || !ticket_type) {
-            valid = false;
-            return;
+        // Reset
+        [firstName, emailEl, ticketEl].forEach(el => el.style.borderColor = '#ddd');
+        [errFirst, errEmail, errTicket].forEach(el => { el.textContent = ''; el.style.display = 'none'; });
+
+        const first  = firstName.value.trim();
+        const last   = lastName.value.trim();
+        const email  = emailEl.value.trim();
+        const ticket = ticketEl.value;
+
+        let rowOk = true;
+
+        if (!first) {
+            firstName.style.borderColor = '#e74c3c';
+            errFirst.textContent = 'First name is required.';
+            errFirst.style.display = 'block';
+            rowOk = false;
+        }
+        if (!email || !emailRegex.test(email)) {
+            emailEl.style.borderColor = '#e74c3c';
+            errEmail.textContent = email ? 'Enter a valid email address.' : 'Email is required.';
+            errEmail.style.display = 'block';
+            rowOk = false;
+        }
+        if (!ticket) {
+            ticketEl.style.borderColor = '#e74c3c';
+            errTicket.textContent = 'Select a ticket type.';
+            errTicket.style.display = 'block';
+            rowOk = false;
         }
 
-        entries.push({ first_name, last_name, email, ticket_type });
+        if (rowOk) {
+            entries.push({ first_name: first, last_name: last, email, ticket_type: ticket });
+        } else {
+            valid = false;
+        }
     });
 
-    if (!valid) return;
+    if (!valid) {
+        showInviteAlert('danger', '<i class="fas fa-exclamation-triangle me-2"></i>Please fix the highlighted fields.');
+        return;
+    }
+
+    // Show loading state
+    const btn = document.getElementById('sendInviteBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending…';
 
     fetch('/send-invitations/', {
         method: 'POST',
@@ -151,16 +231,55 @@ document.getElementById('sendInviteBtn').addEventListener('click', function () {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            bootstrap.Modal.getInstance(
-                document.getElementById('sendInvitationModal')
-            ).hide();
-            alert(data.message || 'Invitations sent successfully.');
+            showInviteAlert('success',
+                `<i class="fas fa-check-circle me-2"></i>${data.message || `${entries.length} invitation(s) sent successfully.`}`
+            );
+            // Clear rows, add fresh one
+            setTimeout(() => {
+                document.getElementById('invitationEntries').innerHTML = '';
+                document.getElementById('invitationEntries').appendChild(createEntryRow());
+            }, 2000);
         } else {
-            alert(data.error || 'Something went wrong.');
+            showInviteAlert('danger',
+                `<i class="fas fa-times-circle me-2"></i>${data.error || 'Something went wrong. Please try again.'}`
+            );
         }
     })
-    .catch(() => alert('Network error. Please try again.'));
+    .catch(() => {
+        showInviteAlert('danger', '<i class="fas fa-wifi me-2"></i>Network error. Please try again.');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send Invitation';
+    });
 });
-    </script>
 
-    {% endblock %}
+// ─── Alert helpers ────────────────────────────────────────────────────────────
+function showInviteAlert(type, html) {
+    const el = document.getElementById('inviteAlert');
+    const styles = {
+        success : { bg: '#f0fdf4', border: '#2ecc71', color: '#1e8449' },
+        danger  : { bg: '#fdf2f2', border: '#e74c3c', color: '#c0392b' },
+        info    : { bg: '#eef5ff', border: '#3498db', color: '#1a5276' },
+    };
+    const s = styles[type] || styles.info;
+    el.style.cssText = `
+        display:flex; align-items:flex-start; gap:8px;
+        background:${s.bg}; border:1px solid ${s.border};
+        color:${s.color}; border-radius:8px;
+        padding:12px 16px; margin-bottom:18px; font-size:13px;
+    `;
+    el.innerHTML = html;
+}
+function hideInviteAlert() {
+    const el = document.getElementById('inviteAlert');
+    el.style.display = 'none';
+    el.innerHTML = '';
+}
+
+function getCsrfToken() {
+    return document.cookie.split('; ')
+        .find(r => r.startsWith('csrftoken'))
+        ?.split('=')[1] || '';
+}
+</script>
