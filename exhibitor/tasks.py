@@ -61,15 +61,18 @@ def bulk_upload_save_task(preview_data, exhibitor_id):
                     onsite_badge_printed=row.get("onsite_badge_printed", False),
                 )
 
-                Badge.objects.create(
-                    attendee=attendee,
-                    badge_type=row["ticket_type"].upper(),
-                    ticket_class=f"{row['ticket_type']} Pass",
-                )
+                try:
+                    Badge.objects.create(
+                        attendee=attendee,
+                        badge_type=row["ticket_type"].upper(),
+                    )
+                except Exception as e:
+                    print(f"BADGE FAILED: {type(e).__name__}: {e}")  # or use logger.error
+                    raise  # re-raise so you see it in Celery logs
 
                 created += 1
 
-            except IntegrityError:
+            except IntegrityError as e:
                 skipped += 1
 
             except Exception:

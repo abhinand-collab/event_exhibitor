@@ -188,6 +188,24 @@
   </div>
 </div>
 
+{# ============================================================ #}
+{# NOTIFICATION MODAL – replaces all alerts                     #}
+{# ============================================================ #}
+<div class="modal fade" id="notificationModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" id="notificationHeader">
+        <h5 class="modal-title" id="notificationTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="notificationMessage"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="notificationOkBtn" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 {# ============================================================ #}
 {# STYLES                                                       #}
@@ -277,6 +295,11 @@
   flex-direction: column;
   overflow: hidden;
 }
+/* Notification modal variants */
+.notification-success .modal-header { background-color: #d1fae5; color: #065f46; border-bottom-color: #a7f3d0; }
+.notification-error   .modal-header { background-color: #fee2e2; color: #991b1b; border-bottom-color: #fecaca; }
+.notification-warning .modal-header { background-color: #fed7aa; color: #92400e; border-bottom-color: #fdba74; }
+.notification-info    .modal-header { background-color: #dbeafe; color: #1e40af; border-bottom-color: #bfdbfe; }
 </style>
 
 <script>
@@ -284,6 +307,29 @@
 // HELPERS
 // ─────────────────────────────────────────────────────────────
 
+function showNotificationModal(title, message, type = 'info') {
+  const modalEl = document.getElementById('notificationModal');
+  const titleEl = document.getElementById('notificationTitle');
+  const msgEl = document.getElementById('notificationMessage');
+  
+  // Reset classes
+  modalEl.classList.remove('notification-success', 'notification-error', 'notification-warning', 'notification-info');
+  modalEl.classList.add(`notification-${type}`);
+  
+  titleEl.textContent = title;
+  msgEl.innerHTML = message; // Allows HTML formatting (e.g., line breaks, bold)
+  
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
+  
+  // Optional: return a promise that resolves when modal is hidden
+  return new Promise((resolve) => {
+    modalEl.addEventListener('hidden.bs.modal', function onHidden() {
+      modalEl.removeEventListener('hidden.bs.modal', onHidden);
+      resolve();
+    });
+  });
+}
 function getCsrfToken() {
   return document.cookie
     .split("; ")
@@ -357,7 +403,7 @@ document.getElementById("backToUploadBtn").addEventListener("click", () => {
 
 document.getElementById("uploadBulkBtn").addEventListener("click", () => {
   const file = document.getElementById("bulkFile").files[0];
-  if (!file) return alert("Please select a file first.");
+  if (!file) return showNotificationModal('No File', 'Please select a file first.', 'warning');
 
   const fd = new FormData();
   fd.append("file", file);
@@ -462,7 +508,7 @@ async function loadPreviewData(page = 1, filter = pagination.activeTab) {
     applySavedEditsToCurrentPage();
   } catch (error) {
     console.error("Error loading preview:", error);
-    alert("Error loading preview data");
+    showNotificationModal('Preview Error', 'Failed to load preview data. Please check the file and try again.', 'error');
   }
 }
 
@@ -896,14 +942,20 @@ document.getElementById("submitBulkBtn").addEventListener("click", async () => {
     const data = await postJSON("/bulk-upload-save/", {});
     
     if (!data.success) { 
-      alert("❌ " + (data.errors || "Failed to save records")); 
+      await showNotificationModal('Submission Failed', data.errors || 'Failed to save records. Please check your data.', 'error');
       submitBtn.innerHTML = originalText;
       submitBtn.disabled = false;
       return; 
     }
     const result = await pollTaskStatus(data.task_id);
     
-    alert(`✅ Successfully created ${result.created} record(s).\n⚠️ Skipped ${result.skipped} record(s).\n📊 Total valid: ${result.total_valid}`);
+    await showNotificationModal(
+  'Import Complete',
+  `<strong>${result.created}</strong> record(s) created.<br>
+   <strong>${result.skipped}</strong> record(s) skipped.<br>
+   Total valid rows: <strong>${result.total_valid}</strong>`,
+  'success'
+);
     
     // Close modal and reload page
     bootstrap.Modal.getInstance(document.getElementById("bulkPreviewModal")).hide();
@@ -913,7 +965,7 @@ document.getElementById("submitBulkBtn").addEventListener("click", async () => {
     
   } catch (error) {
     console.error("Submit error:", error);
-    alert("Something went wrong. Please try again.");
+    await showNotificationModal('Unexpected Error', 'Something went wrong. Please try again.', 'error');
     submitBtn.innerHTML = originalText;
     submitBtn.disabled = false;
   }
