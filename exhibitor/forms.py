@@ -1,103 +1,6 @@
 from django import forms
 from .models import Attendee
 
-COUNTRY_CHOICES = [
-    ("", "Select Country"),
-    ("ae", "United Arab Emirates"),
-    ("sa", "Saudi Arabia"),
-    ("kw", "Kuwait"),
-    ("qa", "Qatar"),
-    ("bh", "Bahrain"),
-    ("om", "Oman"),
-    ("in", "India"),
-    ("pk", "Pakistan"),
-    ("gb", "United Kingdom"),
-    ("us", "United States"),
-    ("eg", "Egypt"),
-    ("jo", "Jordan"),
-    ("lb", "Lebanon"),
-    ("sy", "Syria"),
-    ("iq", "Iraq"),
-    ("ye", "Yemen"),
-    ("ly", "Libya"),
-    ("tn", "Tunisia"),
-    ("ma", "Morocco"),
-    ("dz", "Algeria"),
-    ("sd", "Sudan"),
-    ("bd", "Bangladesh"),
-    ("lk", "Sri Lanka"),
-    ("np", "Nepal"),
-    ("ph", "Philippines"),
-    ("id", "Indonesia"),
-    ("my", "Malaysia"),
-    ("cn", "China"),
-    ("jp", "Japan"),
-    ("kr", "South Korea"),
-    ("de", "Germany"),
-    ("fr", "France"),
-    ("it", "Italy"),
-    ("es", "Spain"),
-    ("nl", "Netherlands"),
-    ("be", "Belgium"),
-    ("ch", "Switzerland"),
-    ("at", "Austria"),
-    ("au", "Australia"),
-    ("nz", "New Zealand"),
-    ("ca", "Canada"),
-    ("br", "Brazil"),
-    ("za", "South Africa"),
-    ("ng", "Nigeria"),
-    ("ke", "Kenya"),
-]
-
-NATIONALITY_CHOICES = [
-    ("", "Select Nationality"),
-    ("ae", "Emirati"),
-    ("sa", "Saudi"),
-    ("kw", "Kuwaiti"),
-    ("qa", "Qatari"),
-    ("bh", "Bahraini"),
-    ("om", "Omani"),
-    ("in", "Indian"),
-    ("pk", "Pakistani"),
-    ("gb", "British"),
-    ("us", "American"),
-    ("eg", "Egyptian"),
-    ("jo", "Jordanian"),
-    ("lb", "Lebanese"),
-    ("sy", "Syrian"),
-    ("iq", "Iraqi"),
-    ("ye", "Yemeni"),
-    ("ly", "Libyan"),
-    ("tn", "Tunisian"),
-    ("ma", "Moroccan"),
-    ("dz", "Algerian"),
-    ("sd", "Sudanese"),
-    ("bd", "Bangladeshi"),
-    ("lk", "Sri Lankan"),
-    ("np", "Nepali"),
-    ("ph", "Filipino"),
-    ("id", "Indonesian"),
-    ("my", "Malaysian"),
-    ("cn", "Chinese"),
-    ("jp", "Japanese"),
-    ("kr", "Korean"),
-    ("de", "German"),
-    ("fr", "French"),
-    ("it", "Italian"),
-    ("es", "Spanish"),
-    ("nl", "Dutch"),
-    ("be", "Belgian"),
-    ("ch", "Swiss"),
-    ("at", "Austrian"),
-    ("au", "Australian"),
-    ("nz", "New Zealander"),
-    ("ca", "Canadian"),
-    ("br", "Brazilian"),
-    ("za", "South African"),
-    ("ng", "Nigerian"),
-    ("ke", "Kenyan"),
-]
 
 TICKET_TYPE_CHOICES = [
     ("", "Select Ticket Type"),
@@ -143,20 +46,20 @@ class CreateBadgeForm(forms.Form):
             "id": "companyName",
         }),
     )
-    country_of_residence = forms.ChoiceField(
-        choices=COUNTRY_CHOICES,
-        widget=forms.Select(attrs={
-            "class": "form-select select2-modal",
-            "id": "countryResidence",
-        }),
-    )
-    nationality = forms.ChoiceField(
-        choices=NATIONALITY_CHOICES,
-        widget=forms.Select(attrs={
-            "class": "form-select select2-modal",
-            "id": "nationality",
-        }),
-    )
+    country_of_residence = forms.CharField(
+    widget=forms.TextInput(attrs={
+        "class": "form-control",
+        "id": "countryResidence",
+        "placeholder": "Enter country of residence"
+    })
+)
+    nationality = forms.CharField(
+    widget=forms.TextInput(attrs={
+        "class": "form-control",
+        "id": "nationality",
+        "placeholder": "Enter nationality"
+    })
+)
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={
             "placeholder": "Enter email",

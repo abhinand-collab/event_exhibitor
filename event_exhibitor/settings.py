@@ -77,6 +77,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 30,  # Wait up to 30 seconds for a lock (in seconds).
+            'init_command': 'PRAGMA journal_mode=WAL;', # Enable WAL mode
+            'transaction_mode': 'IMMEDIATE', # Better for concurrent writes
+        }
     }
 }
 
@@ -135,3 +140,24 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "abhinandveuz@gmail.com"
 EMAIL_HOST_PASSWORD = "rule eyfu wqli ocsm"  
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+import os
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "celery.log"),
+        },
+    },
+
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
+    },
+}

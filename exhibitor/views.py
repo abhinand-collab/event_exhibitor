@@ -212,10 +212,10 @@ def create_single_badge(request):
             Badge.objects.create(
                 attendee    = attendee,
                 badge_type  = ticket_type,
-                ticket_class= f"{ticket_type} Pass",
             )
 
     except Exception as e:
+        print(str(e),'checkerror')
         return JsonResponse(
             {"success": False, "errors": _friendly_db_error(str(e))},
             status=500,
@@ -311,185 +311,144 @@ def _validate_row(row, existing_emails):
 
     return errors
 
-
+# =============================================================================
+# BULK UPLOAD — STEP 2: Parse file, return ALL rows + existing emails to JS
+# No server-side pagination or filtering needed anymore.
+# JS handles everything after this single response.
+# =============================================================================
+ 
 @login_required
 @require_POST
 def bulk_upload_preview(request):
     """
-    Parse an uploaded file, apply optional column mapping, validate every row,
-    and return a preview payload for the UI.
+    Parse the uploaded file once and return:
+      - data: all rows (no pagination, no filter)
+      - existing_emails: the full set of DB emails so JS can validate client-side
     """
-    file = request.FILES.get("file")
+    file    = request.FILES.get("file")
     mapping = json.loads(request.POST.get("mapping", "{}"))
-    page = int(request.POST.get("page", 1))
-    page_size = int(request.POST.get("page_size", 50))
-    filter_status = request.POST.get("filter", "all")  # NEW
-
+ 
     if not file:
         return JsonResponse({"success": False, "error": "No file uploaded"}, status=400)
-
+ 
     try:
-        # Clear old session data when uploading new file
-        preview_data = None
-
-        if file.name:  # file is present → fresh upload, clear old session
-            request.session.pop("bulk_preview_data", None)
-            
-            # ── Parse file ──────────────────────────────────────────────────────
-            if file.name.endswith(".csv"):
-                df = pd.read_csv(file)
-            else:
-                df = pd.read_excel(file)
-
-            df.columns = [col.strip() for col in df.columns]
-
-            if mapping:
-                df.rename(columns=mapping, inplace=True)
-
-            df = df.where(pd.notnull(df), None)
-
-            # Load all existing emails once (avoid per-row DB hits)
-            existing_emails = set(
-                Attendee.objects.values_list("email", flat=True)
-            )
-
-            # ── Build preview rows ──────────────────────────────────────────────
-            preview_data = []
-            valid_count = 0
-            invalid_count = 0
-
-            for index, row in df.iterrows():
-                # Create a row dict for validation
-                row_dict = {
-                    "first_name": row.get("first_name"),
-                    "email": row.get("email"),
-                    "ticket_type": row.get("ticket_type"),
-                    "accepted_terms": row.get("accepted_terms"),
-                    "country": row.get("country"),
-                    "nationality": row.get("nationality"),
-                }
-                errors = _validate_row(row_dict, existing_emails)
-                status = "valid" if not errors else "invalid"
-
-                if status == "valid":
-                    valid_count += 1
-                else:
-                    invalid_count += 1
-
-                preview_data.append({
-                    "id": index,
-                    "row": index + 1,
-                    "first_name": _clean(row.get("first_name")),
-                    "last_name": _clean(row.get("last_name")),
-                    "email": _clean(row.get("email")),
-                    "mobile_number": _clean(row.get("mobile_number")),
-                    "country": _clean(row.get("country")),
-                    "nationality": _clean(row.get("nationality")),
-                    "company_name": _clean(row.get("company_name")),
-                    "job_title": _clean(row.get("job_title")),
-                    "ticket_type": _clean(row.get("ticket_type")),
-                    "accepted_terms": _to_bool(row.get("accepted_terms")),
-                    "accepted_data_sharing": _to_bool(row.get("accepted_data_sharing")),
-                    "accepted_marketing": _to_bool(row.get("accepted_marketing")),
-                    "digital_badge_issued": _to_bool(row.get("digital_badge_issued")),
-                    "onsite_badge_printed": _to_bool(row.get("onsite_badge_printed")),
-                    "status": status,
-                    "errors": errors,
-                })
-
-            # Store in session
-            request.session["bulk_preview_data"] = preview_data
-            request.session.modified = True
-        
-         # Always compute total counts from full dataset
-        valid_count = sum(1 for r in preview_data if r["status"] == "valid")
-        invalid_count = sum(1 for r in preview_data if r["status"] == "invalid")
-
-        # Apply tab filter BEFORE paginating
-        if filter_status == "valid":
-            filtered = [r for r in preview_data if r["status"] == "valid"]
-        elif filter_status == "invalid":
-            filtered = [r for r in preview_data if r["status"] == "invalid"]
+        # ── Parse ────────────────────────────────────────────────────────────
+        if file.name.endswith(".csv"):
+            df = pd.read_csv(file)
         else:
-            filtered = preview_data
-
-        total_records = len(filtered)
-        total_pages = ceil(total_records / page_size)
-        start = (page - 1) * page_size
-        end = start + page_size
-        paginated_data = filtered[start:end]
-
+            df = pd.read_excel(file)
+ 
+        df.columns = [col.strip() for col in df.columns]
+        if mapping:
+            df.rename(columns=mapping, inplace=True)
+        df = df.where(pd.notnull(df), None)
+ 
+        # ── Existing emails — sent to JS once so it can validate client-side ─
+        existing_emails = list(
+            Attendee.objects.values_list("email", flat=True)
+        )
+ 
+        # ── Build row list (no validation — JS does that) ────────────────────
+        rows = []
+        for index, row in df.iterrows():
+            rows.append({
+                "id"                  : index,
+                "row"                 : index + 1,
+                "first_name"          : _clean(row.get("first_name")),
+                "last_name"           : _clean(row.get("last_name")),
+                "email"               : _clean(row.get("email")),
+                "mobile_number"       : _clean(row.get("mobile_number")),
+                "country"             : _clean(row.get("country")),
+                "nationality"         : _clean(row.get("nationality")),
+                "company_name"        : _clean(row.get("company_name")),
+                "job_title"           : _clean(row.get("job_title")),
+                "ticket_type"         : _clean(row.get("ticket_type")),
+                "accepted_terms"      : _to_bool(row.get("accepted_terms")),
+                "accepted_data_sharing": _to_bool(row.get("accepted_data_sharing")),
+                "accepted_marketing"  : _to_bool(row.get("accepted_marketing")),
+                "digital_badge_issued": _to_bool(row.get("digital_badge_issued")),
+                "onsite_badge_printed": _to_bool(row.get("onsite_badge_printed")),
+                # status / errors intentionally omitted — JS computes them
+            })
+ 
         return JsonResponse({
-            "success": True,
-            "data": paginated_data,
-            "valid_count": valid_count,
-            "invalid_count": invalid_count,
-            "total": total_records,
-            "total_all": len(preview_data),  # always the grand total
-            "page": page,
-            "page_size": page_size,
-            "total_pages": total_pages,
-            "filter": filter_status,
+            "success"        : True,
+            "data"           : rows,
+            "existing_emails": existing_emails,  # ← new: JS uses this for validation
         })
-
+ 
     except Exception as e:
         traceback.print_exc()
         return JsonResponse({"success": False, "error": str(e)}, status=500)
-
-
-# =============================================================================
-# BULK UPLOAD — STEP 3: Save valid rows
-# =============================================================================
-
+ 
 @login_required
 @require_POST
 def bulk_upload_save(request):
-    preview_data = request.session.get("bulk_preview_data", [])
-
-    if not preview_data:
-        return JsonResponse({
-            "success": False,
-            "errors": "No data found in session."
-        }, status=400)
-    
-    # ── Pass limit check ────────────────────────────────────────────────────
+    """
+    Receive pre-filtered valid rows from JS (no status/errors fields in payload).
+    Handles chunked uploads — each chunk is a separate POST.
+    Pass limit is checked on every chunk using live DB count so chunks
+    cannot collectively exceed the limit even if fired in sequence.
+    """
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, KeyError):
+        return JsonResponse({"success": False, "errors": "Invalid request body."}, status=400)
+ 
+    rows         = body.get("rows", [])
+    chunk_index  = body.get("chunk_index", 0)
+    total_chunks = body.get("total_chunks", 1)
+ 
+    if not rows:
+        return JsonResponse({"success": False, "errors": "No valid rows received."}, status=400)
+ 
     exhibitor = request.user.exhibitor
-    used       = Badge.objects.filter(attendee__exhibitor=exhibitor).count()
-    valid_rows = [r for r in preview_data if r.get("status") == "valid"]
-    remaining  = exhibitor.pass_limit - used
-
+ 
+    # ── Pass limit check — live DB count every chunk so cumulative chunks
+    #    cannot sneak past the limit when processed in parallel/sequence ────
+    used      = Badge.objects.filter(attendee__exhibitor=exhibitor).count()
+    remaining = exhibitor.pass_limit - used
+ 
     if remaining <= 0:
         return JsonResponse({
             "success": False,
             "errors": f"Pass limit reached. You have used all {exhibitor.pass_limit} passes."
         }, status=400)
-
-    if len(valid_rows) > remaining:
+ 
+    if len(rows) > remaining:
         return JsonResponse({
             "success": False,
             "errors": (
-                f"Not enough passes remaining. "
-                f"You are trying to import {len(valid_rows)} valid record(s), "
-                f"but only {remaining} pass(es) remain out of your limit of {exhibitor.pass_limit}."
+                f"Not enough passes remaining for chunk {chunk_index + 1}/{total_chunks}. "
+                f"Trying to import {len(rows)} record(s) but only {remaining} pass(es) remain."
             )
         }, status=400)
-
-    # 🚀 Send to Celery
-    task = bulk_upload_save_task.delay(
-        preview_data,
-        request.user.exhibitor.id
-    )
-
-    # Clear session immediately (optional)
-    request.session.pop("bulk_preview_data", None)
-
+ 
+    # 🚀 Fire Celery task — rows are already valid, no status filtering needed
+    task = bulk_upload_save_task.delay(rows, exhibitor.id)
+ 
     return JsonResponse({
-        "success": True,
-        "task_id": task.id,  # 🔥 important for tracking
-        "message": "Processing started in background"
+        "success" : True,
+        "task_id" : task.id,
+        "message" : f"Chunk {chunk_index + 1}/{total_chunks} queued",
     })
-
-
+ 
+# =============================================================================
+# NEW — GET EXISTING EMAILS  (called once on "Upload & Process" click)
+# Returns all attendee emails so the client can do duplicate detection.
+# Replaces the old /get-columns/ and /bulk-upload-preview/ calls entirely.
+# =============================================================================
+ 
+@login_required
+@require_POST
+def get_existing_emails(request):
+    """
+    Lightweight endpoint: return every existing attendee email.
+    The JS stores these in existingEmailsSet for client-side validation.
+    No file parsing happens here — SheetJS handles that in the browser.
+    """
+    emails = list(Attendee.objects.values_list("email", flat=True))
+    return JsonResponse({"success": True, "emails": emails})
 
 # =============================================================================
 # UTILITY — Real-time email duplicate check (called from frontend)
@@ -755,7 +714,7 @@ def export_registrations(request):
 
     headers = [
         "First Name", "Last Name", "Email", "Job Title", "Company Name",
-        "Source", "Ticket Class", "Ticket ID", "Mobile Number",
+        "Source", "Ticket ID", "Mobile Number",
         "Country of Residence", "Nationality",
         "Digital Badge Issued", "Onsite Badge Printed",
         "Accepted Terms", "Accepted Data Sharing", "Accepted Marketing",
@@ -765,7 +724,6 @@ def export_registrations(request):
 
     for reg in qs:
         badge        = getattr(reg, "badge", None)
-        ticket_class = badge.ticket_class if badge else ""
         ticket_id    = str(badge.ticket_id) if badge and badge.ticket_id else ""
         ws.append([
             reg.first_name,
@@ -774,7 +732,6 @@ def export_registrations(request):
             reg.job_title or "",
             reg.company_name or "",
             reg.source or "",
-            ticket_class,
             ticket_id,
             reg.mobile_number or "",
             reg.country_of_residence or "",

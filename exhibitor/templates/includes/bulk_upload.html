@@ -2,6 +2,8 @@
 {# ============================================================ #}
 {#   BULK UPLOAD MODALS + STYLES + SCRIPTS                     #}
 {#   Flow:  Upload → Map columns → Preview (paginated) → Save  #}
+{#   CLIENT-SIDE filtering, validation, pagination             #}
+{#   Server only: initial load (email-exists) + final save     #}
 {# ============================================================ #}
 
 
@@ -87,15 +89,22 @@
     <div class="modal-content" style="border-radius:10px;overflow:hidden;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15);">
 
       {# ── Header ── #}
-      <div class="modal-header" style="background:#fff;border-bottom:3px solid #1a56db;padding:16px 24px;align-items:flex-start;">
+      <div class="modal-header preview-header" style="background:#fff;border-bottom:3px solid #1a56db;padding:16px 24px;align-items:flex-start;">
         <div style="flex:1;">
           <div class="d-flex align-items-center gap-3 mb-1">
             <span style="font-size:18px;font-weight:700;color:#111;">Preview</span>
-            <input type="text" class="form-control form-control-sm" placeholder="Batch name (e.g. Day 1 Attendees)"
+            <input type="text" class="form-control form-control-sm" id="previewSearchInput" placeholder="Search by name, email, company, ticket type…"
                    style="max-width:280px;border-radius:6px;border:1px solid #ddd;font-size:14px;">
           </div>
-          <small class="text-muted" style="font-size:12px;">Name this import batch for reference.</small>
+          <!-- <small class="text-muted" style="font-size:12px;">Name this import batch for reference.</small> -->
         </div>
+         <!-- ✅ ADD THIS SEARCH BAR -->
+    <!-- <div style="margin-top:10px;">
+      <input type="text" id="previewSearchInput"
+             class="form-control form-control-sm"
+             placeholder="🔍 Search by name, email, company, ticket type…"
+             style="max-width:480px;border-radius:6px;border:1px solid #ddd;font-size:13px;">
+    </div> -->
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
@@ -142,19 +151,13 @@
           </table>
         </div>
 
-        {# ── Pagination bar — sits below the scrollable table, inside modal-body ── #}
+        {# ── Pagination bar ── #}
         <div id="paginationBar"
              style="display:flex;align-items:center;justify-content:space-between;
                     padding:10px 16px;border-top:1px solid #e5e7eb;background:#fafafa;">
-
-          {# Left: "Showing X–Y of Z rows" #}
           <span id="paginationInfo" style="font-size:13px;color:#6b7280;"></span>
-
-          {# Centre: prev / page numbers / next #}
           <div id="paginationBtns" style="display:flex;gap:4px;align-items:center;"></div>
-
-          {# Right: rows-per-page selector #}
-          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#6b7280;">
+          <!-- <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#6b7280;">
             <span>Rows per page</span>
             <select id="pageSizeSelect"
                     style="border:1px solid #d1d5db;border-radius:6px;padding:4px 8px;font-size:13px;">
@@ -163,8 +166,7 @@
               <option value="50" selected>50</option>
               <option value="100">100</option>
             </select>
-          </div>
-
+          </div> -->
         </div>
       </div>
 
@@ -189,7 +191,7 @@
 </div>
 
 {# ============================================================ #}
-{# NOTIFICATION MODAL – replaces all alerts                     #}
+{# NOTIFICATION MODAL                                           #}
 {# ============================================================ #}
 <div class="modal fade" id="notificationModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-dialog-centered">
@@ -211,7 +213,6 @@
 {# STYLES                                                       #}
 {# ============================================================ #}
 <style>
-/* ── Tab bar ── */
 .bulk-preview-tab {
   background:none; border:none; border-bottom:3px solid transparent;
   padding:12px 18px; font-size:14px; font-weight:500; color:#6b7280;
@@ -221,25 +222,21 @@
 .bulk-preview-tab:hover  { color:#1a56db; }
 .bulk-preview-tab.active { color:#1a56db; border-bottom-color:#1a56db; }
 
-/* ── Tab badges ── */
 .bpt-badge   { display:inline-flex; align-items:center; justify-content:center;
                min-width:22px; height:20px; padding:0 6px; border-radius:10px;
                font-size:11px; font-weight:700; background:#e5e7eb; color:#374151; }
 .bpt-valid   { background:#d1fae5; color:#065f46; }
 .bpt-invalid { background:#fee2e2; color:#991b1b; }
 
-/* ── Table ── */
 .bpt-th { padding:11px 14px; color:#555; font-weight:600; font-size:12px;
           letter-spacing:.04em; border-bottom:1px solid #e5e7eb; white-space:nowrap; text-align:left; }
 .bpt-td { padding:9px 14px; border-bottom:1px solid #f0f0f0; vertical-align:middle; white-space:nowrap; }
 
-/* ── Row states ── */
 .bpt-row:hover .bpt-td              { background:#f9fafb; }
 .bpt-row-invalid .bpt-td:first-child { border-left:3px solid #ef4444; }
 .bpt-row-invalid .bpt-td            { background:#fff8f8; }
 .bpt-row-invalid:hover .bpt-td      { background:#fff0f0; }
 
-/* ── Inputs ── */
 .bpt-input {
   border:1px solid #d1d5db; border-radius:5px; padding:5px 9px;
   font-size:13px; width:100%; min-width:100px; outline:none;
@@ -249,13 +246,11 @@
 .bpt-input-err   { border-color:#ef4444; background:#fff5f5; }
 .bpt-error       { font-size:11px; color:#dc2626; margin-top:3px; }
 
-/* ── Status pill ── */
 .bpt-status    { display:inline-flex; align-items:center; gap:4px; padding:3px 10px;
                  border-radius:12px; font-size:11.5px; font-weight:600; }
 .bpt-s-valid   { background:#d1fae5; color:#065f46; }
 .bpt-s-invalid { background:#fee2e2; color:#991b1b; }
 
-/* ── Pagination buttons ── */
 .pg-btn {
   min-width:32px; height:32px; padding:0 10px;
   border:1px solid #d1d5db; border-radius:6px;
@@ -267,7 +262,6 @@
 .pg-btn.active  { background:#1a56db; color:#fff; border-color:#1a56db; font-weight:600; }
 .pg-btn:disabled { opacity:.4; cursor:not-allowed; }
 
-/* ── Field-mapping modal ── */
 .fm-row   { display:flex; align-items:center; justify-content:space-between;
             padding:10px 0; border-bottom:1px solid #eee; }
 .fm-left  { width:45%; font-size:14px; color:#333; }
@@ -276,65 +270,82 @@
              font-size:14px; background:#fff; }
 .fm-delete { border:none; background:none; color:#e74c3c; cursor:pointer; font-size:14px; }
 .fm-delete:hover { color:#c0392b; }
-/* ── Field-mapping modal scrollable body ── */
+
 #fieldMappingModal .modal-body {
   max-height: 70vh;
   overflow-y: auto;
   padding: 16px 20px;
 }
-
 #fieldMappingModal .modal-dialog {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
 }
-
 #fieldMappingModal .modal-content {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-/* Notification modal variants */
+.preview-header .btn-close{
+  filter:none;
+}
+
 .notification-success .modal-header { background-color: #d1fae5; color: #065f46; border-bottom-color: #a7f3d0; }
 .notification-error   .modal-header { background-color: #fee2e2; color: #991b1b; border-bottom-color: #fecaca; }
 .notification-warning .modal-header { background-color: #fed7aa; color: #92400e; border-bottom-color: #fdba74; }
 .notification-info    .modal-header { background-color: #dbeafe; color: #1e40af; border-bottom-color: #bfdbfe; }
 </style>
 
+
+{# ============================================================ #}
+{# SCRIPTS                                                      #}
+{# ============================================================ #}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// ─────────────────────────────────────────────────────────────
+
+  document.getElementById("previewSearchInput").addEventListener("input", debounce(function () {
+  pagination.searchQuery = this.value;
+  pagination.currentPage = 1;   // reset to page 1 on new search
+  renderCurrentView();
+}, 200));
+// ═════════════════════════════════════════════════════════════
+// STATE
+// ═════════════════════════════════════════════════════════════
+
+let existingEmailsSet = new Set(); // DB emails — fetched once on "Upload & Process"
+let parsedFileRows    = [];        // Raw rows parsed by SheetJS (never mutated)
+let allRows           = [];        // Working copy with status/errors — single source of truth
+
+const pagination = {
+  currentPage : 1,
+  pageSize    : 50,
+  activeTab   : "all",
+  savedMapping: {},
+  searchQuery : "", 
+};
+
+// ═════════════════════════════════════════════════════════════
 // HELPERS
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
 
 function showNotificationModal(title, message, type = 'info') {
   const modalEl = document.getElementById('notificationModal');
-  const titleEl = document.getElementById('notificationTitle');
-  const msgEl = document.getElementById('notificationMessage');
-  
-  // Reset classes
-  modalEl.classList.remove('notification-success', 'notification-error', 'notification-warning', 'notification-info');
+  modalEl.classList.remove('notification-success','notification-error','notification-warning','notification-info');
   modalEl.classList.add(`notification-${type}`);
-  
-  titleEl.textContent = title;
-  msgEl.innerHTML = message; // Allows HTML formatting (e.g., line breaks, bold)
-  
-  const modal = new bootstrap.Modal(modalEl);
-  modal.show();
-  
-  // Optional: return a promise that resolves when modal is hidden
-  return new Promise((resolve) => {
-    modalEl.addEventListener('hidden.bs.modal', function onHidden() {
-      modalEl.removeEventListener('hidden.bs.modal', onHidden);
+  document.getElementById('notificationTitle').textContent = title;
+  document.getElementById('notificationMessage').innerHTML = message;
+  new bootstrap.Modal(modalEl).show();
+  return new Promise(resolve => {
+    modalEl.addEventListener('hidden.bs.modal', function h() {
+      modalEl.removeEventListener('hidden.bs.modal', h);
       resolve();
     });
   });
 }
+
 function getCsrfToken() {
-  return document.cookie
-    .split("; ")
-    .find(r => r.startsWith("csrftoken"))
-    ?.split("=")[1];
+  return document.cookie.split("; ").find(r => r.startsWith("csrftoken"))?.split("=")[1];
 }
 
 function postJSON(url, data) {
@@ -345,103 +356,263 @@ function postJSON(url, data) {
   }).then(r => r.json());
 }
 
-function postFormData(url, formData) {
+function postFormData(url, fd) {
   return fetch(url, {
     method : "POST",
     headers: { "X-CSRFToken": getCsrfToken() },
-    body   : formData,
+    body   : fd,
   }).then(r => r.json());
 }
 
-// Debounce function to prevent excessive API calls
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const context = this; // ✅ preserve this
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str).replace(/[&<>"']/g, m =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])
+  );
+}
 
-    const later = () => {
-      clearTimeout(timeout);
-      func.apply(context, args); // ✅ use correct this
-    };
-
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+function debounce(fn, ms) {
+  let t;
+  return function(...args) {
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(this, args), ms);
   };
 }
 
-// ─────────────────────────────────────────────────────────────
-// PAGINATION STATE
-// ─────────────────────────────────────────────────────────────
+function cleanVal(v) {
+  if (v == null || v === '') return null;
+  const s = String(v).trim();
+  return s === '' ? null : s;
+}
 
-const pagination = {
-  currentPage  : 1,
-  pageSize     : 50,
-  totalPages   : 1,
-  totalRecords : 0,
-  validCount   : 0,
-  invalidCount : 0,
-  activeTab    : "all",
-  savedMapping : {},
-  previewData  : null,  // Store full preview data for client-side pagination
-};
+function toBool(v) {
+  if (v == null) return false;
+  if (typeof v === 'boolean') return v;
+  return ['true','1','yes','y','checked'].includes(String(v).trim().toLowerCase());
+}
 
-// Track edited rows with proper ID mapping
-const editedRows = new Map(); // Use Map for better performance
+// ═════════════════════════════════════════════════════════════
+// CLIENT-SIDE FILE PARSING  (SheetJS — no server needed)
+// ═════════════════════════════════════════════════════════════
 
-// ─────────────────────────────────────────────────────────────
+/**
+ * Read the selected file with SheetJS and return an array of plain objects.
+ * Column headers are trimmed; values are kept as strings/booleans/numbers.
+ */
+function parseFileInBrowser(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb   = XLSX.read(e.target.result, { type: 'array' });
+        const ws   = wb.Sheets[wb.SheetNames[0]];
+        // defval: '' so missing cells become empty string, not undefined
+        const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        // Normalise header names (trim spaces)
+        const rows = data.map(row => {
+          const out = {};
+          Object.keys(row).forEach(k => { out[k.trim()] = row[k]; });
+          return out;
+        });
+        resolve(rows);
+      } catch(err) { reject(err); }
+    };
+    reader.onerror = () => reject(new Error('File read error'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/**
+ * Apply savedMapping to raw rows, normalise values, and return the
+ * structured row objects that allRows expects.
+ */
+function applyMappingAndNormalise(rawRows, mapping) {
+  return rawRows.map((raw, index) => {
+    // Remap keys according to column mapping
+    const mapped = { ...raw };
+    Object.entries(mapping).forEach(([srcCol, sysField]) => {
+      if (srcCol in mapped) {
+        mapped[sysField] = mapped[srcCol];
+        if (srcCol !== sysField) delete mapped[srcCol];
+      }
+    });
+
+    return {
+      id                  : index,
+      row                 : index + 1,
+      first_name          : cleanVal(mapped.first_name),
+      last_name           : cleanVal(mapped.last_name),
+      email               : cleanVal(mapped.email),
+      mobile_number       : cleanVal(mapped.mobile_number),
+      country             : cleanVal(mapped.country),
+      nationality         : cleanVal(mapped.nationality),
+      company_name        : cleanVal(mapped.company_name),
+      job_title           : cleanVal(mapped.job_title),
+      ticket_type         : cleanVal(mapped.ticket_type),
+      accepted_terms      : toBool(mapped.accepted_terms),
+      accepted_data_sharing: toBool(mapped.accepted_data_sharing),
+      accepted_marketing  : toBool(mapped.accepted_marketing),
+      digital_badge_issued: toBool(mapped.digital_badge_issued),
+      onsite_badge_printed: toBool(mapped.onsite_badge_printed),
+    };
+  });
+}
+
+// ═════════════════════════════════════════════════════════════
+// VALIDATION  (100% client-side)
+// ═════════════════════════════════════════════════════════════
+
+function validateRowData(data, skipId = null) {
+  const errors = [];
+  const NAME_RE = /^[A-Za-z \-'.]+$/;
+
+  const first_name  = String(data.first_name  || "").trim();
+  const last_name   = String(data.last_name   || "").trim();
+  const email       = String(data.email       || "").trim().toLowerCase();
+  const country     = String(data.country     || "").trim();
+  const nationality = String(data.nationality || "").trim();
+  const ticket_type = String(data.ticket_type || "").trim();
+
+  // ── first_name ───────────────────────────────────────────
+  if (!first_name) {
+    errors.push("First name required");
+  } else if (first_name.length < 2) {
+    errors.push("First name must be at least 2 characters");
+  } else if (!NAME_RE.test(first_name)) {
+    errors.push("First name should only contain letters");
+  }
+
+  // ── last_name (optional — only validate if filled) ───────
+  if (last_name) {
+    if (last_name.length < 2) {
+      errors.push("Last name must be at least 2 characters");
+    } else if (!NAME_RE.test(last_name)) {
+      errors.push("Last name should only contain letters");
+    }
+  }
+
+  // ── email ─────────────────────────────────────────────────
+  if (!email || !email.includes("@")) {
+    errors.push("Invalid email");
+  } else {
+    const inDb   = existingEmailsSet.has(email);
+    const inFile = allRows.some(r =>
+      r.id !== skipId && String(r.email || "").trim().toLowerCase() === email
+    );
+    if (inDb || inFile) errors.push("Email already exists");
+  }
+
+  // ── country ───────────────────────────────────────────────
+  if (!country) {
+    errors.push("Country required");
+  }
+
+  // ── nationality ───────────────────────────────────────────
+  if (!nationality) {
+    errors.push("Nationality required");
+  }
+
+  // ── ticket_type ───────────────────────────────────────────
+  if (!ticket_type) {
+    errors.push("Ticket type required");
+  } else if (!["VIP", "VISITOR", "EXHIBITOR"].includes(ticket_type.toUpperCase())) {
+    errors.push("Invalid ticket type");
+  }
+
+  // ── accepted_terms ────────────────────────────────────────
+  if (!data.accepted_terms) {
+    errors.push("Terms must be accepted");
+  }
+
+  return errors;
+}
+
+// ═════════════════════════════════════════════════════════════
 // MODAL NAVIGATION
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
 
 document.getElementById("backToUploadBtn").addEventListener("click", () => {
   bootstrap.Modal.getInstance(document.getElementById("bulkPreviewModal")).hide();
   setTimeout(() => new bootstrap.Modal(document.getElementById("bulkUploadModal")).show(), 350);
 });
 
-// ─────────────────────────────────────────────────────────────
-// STEP 1 — File selected → fetch column headers
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
+// STEP 1 — "Upload & Process" clicked
+//   • Parse file in browser with SheetJS  (no server call)
+//   • Fetch existing DB emails from server (one lightweight call)
+//   • Show column-mapping modal
+// ═════════════════════════════════════════════════════════════
 
-document.getElementById("uploadBulkBtn").addEventListener("click", () => {
+document.getElementById("uploadBulkBtn").addEventListener("click", async () => {
   const file = document.getElementById("bulkFile").files[0];
   if (!file) return showNotificationModal('No File', 'Please select a file first.', 'warning');
 
-  const fd = new FormData();
-  fd.append("file", file);
+  const btn = document.getElementById("uploadBulkBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Reading…';
 
-  postFormData("/get-columns/", fd).then(data => {
-    renderFieldMapping(data.columns);
+  try {
+    // Parse file entirely in the browser
+    parsedFileRows = await parseFileInBrowser(file);
+
+    if (!parsedFileRows.length) {
+      showNotificationModal('Empty File', 'The file contains no data rows.', 'warning');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-upload me-2"></i>Upload &amp; Process';
+      return;
+    }
+
+    // Fetch DB existing emails — the ONLY remaining server call before submit
+    const emailRes = await postJSON("/get-existing-emails/", {});
+    existingEmailsSet = new Set((emailRes.emails || []).map(e => String(e).toLowerCase()));
+
+    // Derive column headers from first row
+    const columns = Object.keys(parsedFileRows[0]);
+    renderFieldMapping(columns);
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-upload me-2"></i>Upload &amp; Process';
+
     new bootstrap.Modal(document.getElementById("fieldMappingModal")).show();
-  });
+  } catch (err) {
+    console.error(err);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-upload me-2"></i>Upload &amp; Process';
+    showNotificationModal('Parse Error', 'Could not read the file. Please check the format and try again.', 'error');
+  }
 });
 
-// ─────────────────────────────────────────────────────────────
-// STEP 2 — Render field-mapping UI
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
+// STEP 2 — Column-mapping UI
+// ═════════════════════════════════════════════════════════════
 
 const SYSTEM_FIELDS = [
-  "first_name", "last_name", "email", "mobile_number",
-  "country", "nationality", "company_name", "job_title",
-  "ticket_type", "accepted_terms", "accepted_data_sharing",
-  "accepted_marketing", "digital_badge_issued", "onsite_badge_printed",
+  "first_name","last_name","email","mobile_number",
+  "country","nationality","company_name","job_title",
+  "ticket_type","accepted_terms","accepted_data_sharing",
+  "accepted_marketing","digital_badge_issued","onsite_badge_printed",
 ];
 
 function toLabel(str) {
-  return str.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  return str.replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function renderFieldMapping(columns) {
   const container = document.getElementById("mappingContainer");
   container.innerHTML = "";
-
   columns.forEach(col => {
+    // Auto-select if column name already matches a system field
+    const autoMatch = SYSTEM_FIELDS.includes(col.toLowerCase()) ? col.toLowerCase() : "";
     const row = document.createElement("div");
     row.className = "fm-row";
     row.innerHTML = `
-      <div class="fm-left">${col}</div>
+      <div class="fm-left">${escapeHtml(col)}</div>
       <div class="fm-right">
-        <select class="fm-select" data-col="${col}">
+        <select class="fm-select" data-col="${escapeHtml(col)}">
           <option value="">— skip —</option>
-          ${SYSTEM_FIELDS.map(f => `<option value="${f}">${toLabel(f)}</option>`).join("")}
+          ${SYSTEM_FIELDS.map(f =>
+            `<option value="${f}" ${autoMatch === f ? 'selected' : ''}>${toLabel(f)}</option>`
+          ).join("")}
         </select>
         <button class="fm-delete" title="Clear"><i class="fas fa-trash"></i></button>
       </div>`;
@@ -450,304 +621,309 @@ function renderFieldMapping(columns) {
   });
 }
 
-// ─────────────────────────────────────────────────────────────
-// STEP 3 — Confirm mapping → load ALL preview data once
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
+// STEP 3 — "Continue" on mapping modal
+//   • Apply mapping to parsedFileRows entirely in JS
+//   • Validate every row client-side
+//   • Show preview modal — zero server calls
+// ═════════════════════════════════════════════════════════════
 
-document.getElementById("confirmMappingBtn").addEventListener("click", async () => {
-  // Save mapping
+document.getElementById("confirmMappingBtn").addEventListener("click", () => {
+  // Collect mapping
   pagination.savedMapping = {};
   document.querySelectorAll(".fm-select").forEach(sel => {
     if (sel.value) pagination.savedMapping[sel.dataset.col] = sel.value;
   });
 
-  // Reset state
+  // Reset pagination state
   pagination.currentPage = 1;
   pagination.pageSize    = parseInt(document.getElementById("pageSizeSelect").value);
   pagination.activeTab   = "all";
-  editedRows.clear();
-  
   document.querySelectorAll(".bulk-preview-tab").forEach(b => b.classList.remove("active"));
   document.querySelector('[data-bptab="all"]').classList.add("active");
 
-  // Load ALL preview data at once (server-side pagination still happens)
-  await loadPreviewData(1, "all");  // no applyTabFilter needed
-  
+  // Apply mapping + normalise in browser
+  const structured = applyMappingAndNormalise(parsedFileRows, pagination.savedMapping);
+
+  // Build allRows with initial validation
+  allRows = structured.map(r => {
+    const errors = validateRowData(r, r.id);
+    return { ...r, status: errors.length === 0 ? "valid" : "invalid", errors };
+  });
+
+  renderCurrentView();
   new bootstrap.Modal(document.getElementById("bulkPreviewModal")).show();
 });
 
-// ─────────────────────────────────────────────────────────────
-// Load preview data from server
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
+// DERIVED VIEWS  (filter + paginate allRows in memory)
+// ═════════════════════════════════════════════════════════════
 
-async function loadPreviewData(page = 1, filter = pagination.activeTab) {
-  const file = document.getElementById("bulkFile").files[0];
-  if (!file) return;
+function getFilteredRows() {
+  const tab = pagination.activeTab;
+  let rows = allRows;
+  if (tab === "valid")   rows = rows.filter(r => r.status === "valid");
+  if (tab === "invalid") rows = rows.filter(r => r.status === "invalid");
 
-  const fd = new FormData();
-  fd.append("file", file);
-  fd.append("mapping", JSON.stringify(pagination.savedMapping));
-  fd.append("page", page);
-  fd.append("page_size", pagination.pageSize);
-  fd.append("filter", filter);  // NEW
-
-  try {
-    const data = await postFormData("/bulk-upload-preview/", fd);
-    
-    pagination.currentPage  = data.page;
-    pagination.totalPages   = data.total_pages;
-    pagination.totalRecords = data.total;        // filtered count for pagination
-    pagination.validCount   = data.valid_count;
-    pagination.invalidCount = data.invalid_count;
-    pagination.previewData  = data.data;
-
-    renderPreviewTable(data.data);
-    updateTabCounts(data.valid_count, data.invalid_count, data.total_all);
-    renderPagination();
-    // NO applyTabFilter() call needed — server already filtered
-    applySavedEditsToCurrentPage();
-  } catch (error) {
-    console.error("Error loading preview:", error);
-    showNotificationModal('Preview Error', 'Failed to load preview data. Please check the file and try again.', 'error');
+  // ✅ ADD THIS BLOCK
+  const q = pagination.searchQuery.toLowerCase().trim();
+  if (q) {
+    rows = rows.filter(r =>
+      [r.first_name, r.last_name, r.email, r.company_name,
+       r.job_title, r.mobile_number, r.ticket_type, r.country, r.nationality]
+      .some(v => v && String(v).toLowerCase().includes(q))
+    );
   }
+
+  return rows;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Apply saved edits to current page rows
-// ─────────────────────────────────────────────────────────────
+function renderCurrentView() {
+  const filtered   = getFilteredRows();
+  const total      = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / pagination.pageSize));
 
-function applySavedEditsToCurrentPage() {
-  const rows = document.querySelectorAll(".bpt-row");
-  rows.forEach(row => {
-    const rowId = parseInt(row.dataset.rowId);
-    if (editedRows.has(rowId)) {
-      const savedData = editedRows.get(rowId);
-      updateRowFromData(row, savedData);
-    }
-  });
+  if (pagination.currentPage > totalPages) pagination.currentPage = totalPages;
+
+  const start = (pagination.currentPage - 1) * pagination.pageSize;
+  const page  = filtered.slice(start, start + pagination.pageSize);
+
+  const validCount   = allRows.filter(r => r.status === "valid").length;
+  const invalidCount = allRows.filter(r => r.status === "invalid").length;
+
+  updateTabCounts(validCount, invalidCount, allRows.length);
+  renderPreviewTable(page);
+  renderPagination(total, totalPages);
 }
 
-// ─────────────────────────────────────────────────────────────
-// Update row UI from saved data
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
+// TAB COUNTS
+// ═════════════════════════════════════════════════════════════
 
-function updateRowFromData(row, data) {
-  // Update input values
-  if (data.first_name !== undefined) row.children[1].querySelector("input").value = data.first_name;
-  if (data.last_name !== undefined) row.children[2].querySelector("input").value = data.last_name;
-  if (data.email !== undefined) row.children[3].querySelector("input").value = data.email;
-  if (data.mobile_number !== undefined) row.children[4].querySelector("input").value = data.mobile_number;
-  if (data.country !== undefined) row.children[5].querySelector("input").value = data.country;
-  if (data.nationality !== undefined) row.children[6].querySelector("input").value = data.nationality;
-  if (data.company_name !== undefined) row.children[7].querySelector("input").value = data.company_name;
-  if (data.job_title !== undefined) row.children[8].querySelector("input").value = data.job_title;
-  if (data.ticket_type !== undefined) row.children[9].querySelector("select").value = data.ticket_type;
-  if (data.accepted_terms !== undefined) row.children[10].querySelector("input").checked = data.accepted_terms;
-  if (data.accepted_data_sharing !== undefined) row.children[11].querySelector("input").checked = data.accepted_data_sharing;
-  if (data.accepted_marketing !== undefined) row.children[12].querySelector("input").checked = data.accepted_marketing;
-  if (data.digital_badge_issued !== undefined) row.children[13].querySelector("input").checked = data.digital_badge_issued;
-  if (data.onsite_badge_printed !== undefined) row.children[14].querySelector("input").checked = data.onsite_badge_printed;
-  
-  // Update status if provided
-  if (data.status) {
-    row.dataset.bpstatus = data.status;
-    const pill = row.children[15].querySelector(".bpt-status");
-    pill.className = `bpt-status ${data.status === 'valid' ? 'bpt-s-valid' : 'bpt-s-invalid'}`;
-    pill.textContent = data.status;
-    row.classList.toggle("bpt-row-invalid", data.status !== 'valid');
-    recalculateTabCounts()
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-// Render table rows for current page
-// ─────────────────────────────────────────────────────────────
-
-// ── updateTabCounts uses total_all (grand total) for "All" badge ──
 function updateTabCounts(valid, invalid, totalAll) {
   document.getElementById("tab-count-all").textContent     = totalAll;
   document.getElementById("tab-count-valid").textContent   = valid;
   document.getElementById("tab-count-invalid").textContent = invalid;
 }
 
+// ═════════════════════════════════════════════════════════════
+// RENDER TABLE
+// ═════════════════════════════════════════════════════════════
 
 function renderPreviewTable(rows) {
-  console.log("renderpreviewtable")
   const tbody = document.getElementById("previewTableBody");
   tbody.innerHTML = "";
 
   rows.forEach(r => {
-  const isInvalid = r.status === "invalid";
-  const err = msg => r.errors.includes(msg) ? `<div class="bpt-error">${msg}</div>` : "";
-  const cls = msg => r.errors.includes(msg) ? "bpt-input-err" : "";
+    const isInvalid = r.status === "invalid";
+    const err = msg => r.errors.includes(msg) ? `<div class="bpt-error">${msg}</div>` : "";
+    const cls = msg => r.errors.includes(msg) ? "bpt-input-err" : "";
 
-  const tr = document.createElement("tr");
-  tr.className        = `bpt-row ${isInvalid ? "bpt-row-invalid" : ""}`;
-  tr.dataset.bpstatus = r.status;
-  tr.dataset.rowId    = r.id;  // Store row ID for tracking
+    const tr = document.createElement("tr");
+    tr.className        = `bpt-row ${isInvalid ? "bpt-row-invalid" : ""}`;
+    tr.dataset.bpstatus = r.status;
+    tr.dataset.rowId    = r.id;
 
-  tr.innerHTML = `
-    <td class="bpt-td" style="color:#888;font-weight:600;">${r.row}</td>
-    <td class="bpt-td">
-      <input class="bpt-input ${cls('First name required')}" value="${escapeHtml(r.first_name || '')}">
-      ${err('First name required')}
-    </td>
-    <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.last_name || '')}"></td>
-    <td class="bpt-td">
-      <input class="bpt-input ${cls('Invalid email')}" value="${escapeHtml(r.email || '')}">
-      ${err('Invalid email')}${err('Email already exists')}
-    </td>
-    <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.mobile_number || '')}"></td>
-    <td class="bpt-td">
-      <input class="bpt-input ${cls('Country required')}" value="${escapeHtml(r.country || '')}">
-      ${err('Country required')}
-    </td>
-    <td class="bpt-td">
-      <input class="bpt-input ${cls('Nationality required')}" value="${escapeHtml(r.nationality || '')}">
-      ${err('Nationality required')}
-    </td>
-    <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.company_name || '')}"></td>
-    <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.job_title || '')}"></td>
-    <td class="bpt-td">
-      <select class="bpt-input bpt-ticket-type">
-        <option value="">Select</option>
-        <option value="VIP"       ${r.ticket_type === "VIP" ? "selected" : ""}>VIP</option>
-        <option value="VISITOR"   ${r.ticket_type === "VISITOR" ? "selected" : ""}>Visitor</option>
-        <option value="EXHIBITOR" ${r.ticket_type === "EXHIBITOR" ? "selected" : ""}>Exhibitor</option>
-      </select>
-      ${err('Ticket type required')}
-    </td>
-    <td class="bpt-td text-center">
-      <input type="checkbox" ${r.accepted_terms ? "checked" : ""}>
-    </td>
-    <td class="bpt-td text-center">
-      <input type="checkbox" ${r.accepted_data_sharing ? "checked" : ""}>
-    </td>
-    <td class="bpt-td text-center">
-      <input type="checkbox" ${r.accepted_marketing ? "checked" : ""}>
-    </td>
-    <td class="bpt-td text-center">
-      <input type="checkbox" ${r.digital_badge_issued ? "checked" : ""}>
-    </td>
-    <td class="bpt-td text-center">
-      <input type="checkbox" ${r.onsite_badge_printed ? "checked" : ""}>
-    </td>
-    <td class="bpt-td">
-      <span class="bpt-status ${isInvalid ? 'bpt-s-invalid' : 'bpt-s-valid'}">
-        ${r.status}
-      </span>
-      <button class="btn btn-sm btn-outline-primary check-row-btn ms-1">✔ Check</button>
-    </td>`;
+    tr.innerHTML = `
+      <td class="bpt-td" style="color:#888;font-weight:600;">${r.row}</td>
+      <td class="bpt-td">
+        <input class="bpt-input ${cls('First name required')}" value="${escapeHtml(r.first_name)}">
+        ${err('First name required')}
+      </td>
+      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.last_name)}"></td>
+      <td class="bpt-td">
+        <input class="bpt-input ${cls('Invalid email')} ${cls('Email already exists')}" value="${escapeHtml(r.email)}">
+        ${err('Invalid email')}${err('Email already exists')}
+      </td>
+      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.mobile_number)}"></td>
+      <td class="bpt-td">
+        <input class="bpt-input ${cls('Country required')}" value="${escapeHtml(r.country)}">
+        ${err('Country required')}
+      </td>
+      <td class="bpt-td">
+        <input class="bpt-input ${cls('Nationality required')}" value="${escapeHtml(r.nationality)}">
+        ${err('Nationality required')}
+      </td>
+      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.company_name)}"></td>
+      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.job_title)}"></td>
+      <td class="bpt-td">
+        <select class="bpt-input bpt-ticket-type ${cls('Ticket type required')}">
+          <option value="">Select</option>
+          <option value="VIP"       ${r.ticket_type === "VIP"       ? "selected" : ""}>VIP</option>
+          <option value="VISITOR"   ${r.ticket_type === "VISITOR"   ? "selected" : ""}>Visitor</option>
+          <option value="EXHIBITOR" ${r.ticket_type === "EXHIBITOR" ? "selected" : ""}>Exhibitor</option>
+        </select>
+        ${err('Ticket type required')}
+      </td>
+      <td class="bpt-td text-center"><input type="checkbox" ${r.accepted_terms         ? "checked" : ""}></td>
+      <td class="bpt-td text-center"><input type="checkbox" ${r.accepted_data_sharing  ? "checked" : ""}></td>
+      <td class="bpt-td text-center"><input type="checkbox" ${r.accepted_marketing     ? "checked" : ""}></td>
+      <td class="bpt-td text-center"><input type="checkbox" ${r.digital_badge_issued   ? "checked" : ""}></td>
+      <td class="bpt-td text-center"><input type="checkbox" ${r.onsite_badge_printed   ? "checked" : ""}></td>
+      <td class="bpt-td">
+        <span class="bpt-status ${isInvalid ? 'bpt-s-invalid' : 'bpt-s-valid'}">${r.status}</span>
+        <button class="btn btn-sm btn-outline-primary check-row-btn ms-1">✔ Check</button>
+      </td>`;
 
-  tbody.appendChild(tr);
+    tbody.appendChild(tr);
   });
-  // Attach event listeners to new rows
+
   attachRowEventListeners();
 }
 
-// Escape HTML to prevent XSS
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
-}
-
-// ─────────────────────────────────────────────────────────────
-// Attach event listeners to rows for auto-save
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
+// ROW INPUT CHANGE — silent sync only (no validation on typing)
+// ═════════════════════════════════════════════════════════════
 
 function attachRowEventListeners() {
-  console.log("attachroooow")
-  document.querySelectorAll(".bpt-row").forEach(row => {
-    const inputs = row.querySelectorAll("input, select");
-    inputs.forEach(input => {
-      input.removeEventListener("input", handleRowChange);
-input.addEventListener("input", handleRowChange);
+  document.querySelectorAll(".bpt-row").forEach(tr => {
+    tr.querySelectorAll("input, select").forEach(inp => {
+      inp.removeEventListener("input",  handleFieldChange);
+      inp.removeEventListener("change", handleFieldChange);
+      inp.addEventListener("input",  handleFieldChange);
+      inp.addEventListener("change", handleFieldChange);
     });
   });
 }
 
-const handleRowChange = debounce(async function() {
-  const row = this.closest(".bpt-row");
-  const rowId = parseInt(row.dataset.rowId);
-  
-  const rowData = {
-    id: rowId,
-    first_name: row.children[1].querySelector("input").value.trim(),
-    last_name: row.children[2].querySelector("input").value.trim(),
-    email: row.children[3].querySelector("input").value.trim(),
-    mobile_number: row.children[4].querySelector("input").value.trim(),
-    country: row.children[5].querySelector("input").value.trim(),
-    nationality: row.children[6].querySelector("input").value.trim(),
-    company_name: row.children[7].querySelector("input").value.trim(),
-    job_title: row.children[8].querySelector("input").value.trim(),
-    ticket_type: row.children[9].querySelector("select").value,
-    accepted_terms: row.children[10].querySelector("input").checked,
-    accepted_data_sharing: row.children[11].querySelector("input").checked,
-    accepted_marketing: row.children[12].querySelector("input").checked,
-    digital_badge_issued: row.children[13].querySelector("input").checked,
-    onsite_badge_printed: row.children[14].querySelector("input").checked,
+const handleFieldChange = debounce(function() {
+  const tr = this.closest(".bpt-row");
+  if (!tr) return;
+  const rowId = parseInt(tr.dataset.rowId);
+  const idx   = allRows.findIndex(r => r.id === rowId);
+  if (idx === -1) return;
+  // Silently keep allRows in sync with DOM — no re-validation
+  Object.assign(allRows[idx], readRowFromDOM(tr));
+}, 150);
+
+function readRowFromDOM(tr) {
+  return {
+    first_name           : tr.children[1].querySelector("input").value.trim(),
+    last_name            : tr.children[2].querySelector("input").value.trim(),
+    email                : tr.children[3].querySelector("input").value.trim(),
+    mobile_number        : tr.children[4].querySelector("input").value.trim(),
+    country              : tr.children[5].querySelector("input").value.trim(),
+    nationality          : tr.children[6].querySelector("input").value.trim(),
+    company_name         : tr.children[7].querySelector("input").value.trim(),
+    job_title            : tr.children[8].querySelector("input").value.trim(),
+    ticket_type          : tr.children[9].querySelector("select").value,
+    accepted_terms       : tr.children[10].querySelector("input").checked,
+    accepted_data_sharing: tr.children[11].querySelector("input").checked,
+    accepted_marketing   : tr.children[12].querySelector("input").checked,
+    digital_badge_issued : tr.children[13].querySelector("input").checked,
+    onsite_badge_printed : tr.children[14].querySelector("input").checked,
   };
-  
-  // Store in Map
-  editedRows.set(rowId, rowData);
-  
-  // Auto-save to session (debounced)
-  await syncEditsToServer();
-}, 500); // Wait 500ms after last keystroke
-
-// ─────────────────────────────────────────────────────────────
-// Sync edits to server session
-// ─────────────────────────────────────────────────────────────
-
-async function syncEditsToServer() {
-  if (editedRows.size === 0) return;
-  
-  const updates = Array.from(editedRows.values());
-  
-  try {
-    const result = await postJSON("/bulk-update-session/", { rows: updates });
-    if (!result.success) {
-      console.error("Failed to sync edits:", result.error);
-    } else {
-      // Clear only the synced edits from local Map
-      // Don't clear all, because there might be multiple pages of edits
-      
-    }
-  } catch (error) {
-    console.error("Error syncing edits:", error);
-  }
 }
 
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
+// "✔ CHECK" BUTTON — validate row, update status + counts
+// ═════════════════════════════════════════════════════════════
+
+document.addEventListener("click", e => {
+  if (!e.target.classList.contains("check-row-btn")) return;
+
+  const tr    = e.target.closest("tr");
+  const rowId = parseInt(tr.dataset.rowId);
+  const idx   = allRows.findIndex(r => r.id === rowId);
+  if (idx === -1) return;
+
+  const updated = readRowFromDOM(tr);
+  const errors  = validateRowData(updated, rowId);
+  const status  = errors.length === 0 ? "valid" : "invalid";
+
+  Object.assign(allRows[idx], updated, { errors, status });
+  updateRowUI(tr, allRows[idx]);
+
+  const validCount   = allRows.filter(r => r.status === "valid").length;
+  const invalidCount = allRows.filter(r => r.status === "invalid").length;
+  updateTabCounts(validCount, invalidCount, allRows.length);
+
+  if (pagination.activeTab !== "all") renderCurrentView();
+});
+
+// Update error markers + status pill for a single row (no table re-render)
+function updateRowUI(tr, rowData) {
+  const { errors, status } = rowData;
+  const isInvalid = status === "invalid";
+
+  const refreshCell = (cellIdx, inputSel, ...messages) => {
+    const td  = tr.children[cellIdx];
+    const inp = td.querySelector(inputSel);
+    td.querySelectorAll(".bpt-error").forEach(el => el.remove());
+    inp.classList.remove("bpt-input-err");
+    const mine = messages.filter(m => errors.includes(m));
+    if (mine.length) {
+      inp.classList.add("bpt-input-err");
+      mine.forEach(m => inp.insertAdjacentHTML("afterend", `<div class="bpt-error">${m}</div>`));
+    }
+  };
+
+  // ── now covers all error messages including new name rules ──
+  refreshCell(1, "input",
+    "First name required",
+    "First name must be at least 2 characters",   // ✅ new
+    "First name should only contain letters"       // ✅ new
+  );
+  refreshCell(2, "input",
+    "Last name must be at least 2 characters",     // ✅ new
+    "Last name should only contain letters"        // ✅ new
+  );
+  refreshCell(3, "input",  "Invalid email", "Email already exists");
+  refreshCell(5, "input",  "Country required");
+  refreshCell(6, "input",  "Nationality required");
+  refreshCell(9, "select",
+    "Ticket type required",
+    "Invalid ticket type"                          // ✅ new
+  );
+
+  const termsTd = tr.children[10];
+  termsTd.querySelectorAll(".bpt-error").forEach(el => el.remove());
+  if (errors.includes("Terms must be accepted"))
+    termsTd.insertAdjacentHTML("beforeend", `<div class="bpt-error">Required</div>`);
+
+  tr.dataset.bpstatus = status;
+  tr.classList.toggle("bpt-row-invalid", isInvalid);
+
+  const pill = tr.children[15].querySelector(".bpt-status");
+  pill.className   = `bpt-status ${isInvalid ? "bpt-s-invalid" : "bpt-s-valid"}`;
+  pill.textContent = status;
+}
+
+// ═════════════════════════════════════════════════════════════
+// TAB FILTER
+// ═════════════════════════════════════════════════════════════
+
+document.querySelectorAll(".bulk-preview-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".bulk-preview-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    pagination.activeTab   = btn.dataset.bptab;
+    pagination.currentPage = 1;
+    renderCurrentView();
+  });
+});
+
+// ═════════════════════════════════════════════════════════════
 // PAGINATION
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
 
-function renderPagination() {
-  const { currentPage, totalPages, totalRecords, pageSize } = pagination;
+function renderPagination(total, totalPages) {
+  const { currentPage, pageSize } = pagination;
+  const from = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const to   = Math.min(currentPage * pageSize, total);
 
-  const from = (currentPage - 1) * pageSize + 1;
-  const to   = Math.min(currentPage * pageSize, totalRecords);
   document.getElementById("paginationInfo").textContent =
-    totalRecords === 0 ? "" : `Showing ${from}–${to} of ${totalRecords} rows`;
+    total === 0 ? "No rows" : `Showing ${from}–${to} of ${total} rows`;
 
   const container = document.getElementById("paginationBtns");
   container.innerHTML = "";
-
   if (totalPages <= 1) return;
 
-  // Prev button
-  container.appendChild(makePageBtn("‹", currentPage === 1, () => goToPage(currentPage - 1)));
-
-  // Page numbers
+  container.appendChild(makePageBtn("‹", currentPage === 1,          () => goToPage(currentPage - 1)));
   buildPageRange(currentPage, totalPages).forEach(p => {
     if (p === "…") {
       const dot = document.createElement("span");
-      dot.textContent  = "…";
+      dot.textContent   = "…";
       dot.style.cssText = "padding:0 4px;color:#9ca3af;line-height:32px;";
       container.appendChild(dot);
     } else {
@@ -756,19 +932,13 @@ function renderPagination() {
       container.appendChild(btn);
     }
   });
-
-  // Next button
   container.appendChild(makePageBtn("›", currentPage === totalPages, () => goToPage(currentPage + 1)));
 }
 
 function buildPageRange(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-
   const pages = new Set([1, total]);
-  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
-    pages.add(i);
-  }
-
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.add(i);
   const sorted = [...pages].sort((a, b) => a - b);
   const result = [];
   sorted.forEach((p, i) => {
@@ -779,258 +949,135 @@ function buildPageRange(current, total) {
 }
 
 function makePageBtn(label, disabled, onClick) {
-  const btn       = document.createElement("button");
-  btn.className   = "pg-btn";
+  const btn     = document.createElement("button");
+  btn.className = "pg-btn";
   btn.textContent = label;
   btn.disabled    = disabled;
   if (!disabled) btn.addEventListener("click", onClick);
   return btn;
 }
 
-async function goToPage(page) {
-  if (page < 1 || page > pagination.totalPages) return;
-  
-  // Save current edits before changing page
-  await syncEditsToServer();
-  
+function goToPage(page) {
+  if (page < 1) return;
   pagination.currentPage = page;
-  await loadPreviewData(page);
+  renderCurrentView();
 }
 
-// ─────────────────────────────────────────────────────────────
-// Rows-per-page selector
-// ─────────────────────────────────────────────────────────────
-
-document.getElementById("pageSizeSelect").addEventListener("change", async function () {
-  // Save current edits
-  await syncEditsToServer();
-  
+document.getElementById("pageSizeSelect").addEventListener("change", function () {
   pagination.pageSize    = parseInt(this.value);
   pagination.currentPage = 1;
-  await loadPreviewData(1);
+  renderCurrentView();
 });
 
-// ─────────────────────────────────────────────────────────────
-// TAB FILTERING
-// ─────────────────────────────────────────────────────────────
-
-function applyTabFilter(tab) {
-  document.querySelectorAll(".bpt-row").forEach(row => {
-    row.style.display = (tab === "all" || row.dataset.bpstatus === tab) ? "" : "none";
-  });
-}
-
-document.querySelectorAll(".bulk-preview-tab").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".bulk-preview-tab").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    pagination.activeTab = btn.dataset.bptab;
-    pagination.currentPage = 1;
-    loadPreviewData(1, pagination.activeTab);  // server-side filter
-  });
-});
-
-// ─────────────────────────────────────────────────────────────
-// ROW VALIDATION (Check button)
-// ─────────────────────────────────────────────────────────────
-
-document.addEventListener("click", async e => {
-  if (!e.target.classList.contains("check-row-btn")) return;
-  console.log("check this function working")
-
-  const tr         = e.target.closest("tr");
-  const rowId      = parseInt(tr.dataset.rowId);
-  const first_name = tr.children[1].querySelector("input").value.trim();
-  const email      = tr.children[3].querySelector("input").value.trim();
-  const country    = tr.children[5].querySelector("input").value.trim();
-  const nationality= tr.children[6].querySelector("input").value.trim();
-  const termsOk    = tr.children[10].querySelector("input").checked;
-  const ticketType = tr.children[9].querySelector("select").value;
-
-  // Clear previous error markers
-  tr.querySelectorAll(".bpt-error").forEach(el => el.remove());
-  tr.querySelectorAll(".bpt-input").forEach(inp => inp.classList.remove("bpt-input-err"));
-
-  const errors = [];
-  if (!first_name) errors.push("First name required");
-  if (!email || !email.includes("@")) errors.push("Invalid email");
-  if (!country) errors.push("Country required");
-  if (!nationality) errors.push("Nationality required");
-  if (!ticketType) errors.push("Ticket type required");
-  if (!termsOk) errors.push("Terms must be accepted");
-
-  // Live DB email check
-  if (email && email.includes("@")) {
-    const res = await postJSON("/validate-email/", { email });
-    if (res.exists) errors.push("Email already exists");
-  }
-
-  // Render error markers
-  if (errors.includes("First name required")) {
-    const td = tr.children[1];
-    td.querySelector("input").classList.add("bpt-input-err");
-    td.insertAdjacentHTML("beforeend", `<div class="bpt-error">First name required</div>`);
-  }
-  if (errors.includes("Invalid email") || errors.includes("Email already exists")) {
-    const td = tr.children[3];
-    td.querySelector("input").classList.add("bpt-input-err");
-    errors
-      .filter(e => ["Invalid email", "Email already exists"].includes(e))
-      .forEach(msg => td.insertAdjacentHTML("beforeend", `<div class="bpt-error">${msg}</div>`));
-  }
-  if (errors.includes("Country required")) {
-    const td = tr.children[5];
-    td.querySelector("input").classList.add("bpt-input-err");
-    td.insertAdjacentHTML("beforeend", `<div class="bpt-error">Country required</div>`);
-  }
-  if (errors.includes("Nationality required")) {
-    const td = tr.children[6];
-    td.querySelector("input").classList.add("bpt-input-err");
-    td.insertAdjacentHTML("beforeend", `<div class="bpt-error">Nationality required</div>`);
-  }
-  if (errors.includes("Ticket type required")) {
-    const td = tr.children[9];
-    td.querySelector("select").classList.add("bpt-input-err");
-    td.insertAdjacentHTML("beforeend", `<div class="bpt-error">Ticket type required</div>`);
-  }
-  if (errors.includes("Terms must be accepted")) {
-    tr.children[10].insertAdjacentHTML("beforeend", `<div class="bpt-error">Required</div>`);
-  }
-
-  const isValid = errors.length === 0;
-
-  // Update row appearance
-  tr.dataset.bpstatus = isValid ? "valid" : "invalid";
-  tr.classList.toggle("bpt-row-invalid", !isValid);
-
-  // Update status pill (column index 15)
-  const pill       = tr.children[15].querySelector(".bpt-status");
-  pill.className   = `bpt-status ${isValid ? "bpt-s-valid" : "bpt-s-invalid"}`;
-  pill.textContent = isValid ? "valid" : "invalid";
-  recalculateTabCounts()
-  applyTabFilter(pagination.activeTab);
-    console.log(editedRows,"checkworkkkkking")
-  // Save the updated status to edited rows
-  if (editedRows.has(rowId)) {
-    const rowData = editedRows.get(rowId);
-    rowData.status = isValid ? "valid" : "invalid";
-    editedRows.set(rowId, rowData);
-    await syncEditsToServer();
-  }
-});
-
-// ─────────────────────────────────────────────────────────────
-// SUBMIT BULK UPLOAD
-// ─────────────────────────────────────────────────────────────
-
-// ─────────────────────────────────────────────────────────────
-// SUBMIT BULK UPLOAD - Saves ALL valid rows from session
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
+// SUBMIT — POST allRows JSON to server → Celery task
+// ═════════════════════════════════════════════════════════════
 
 document.getElementById("submitBulkBtn").addEventListener("click", async () => {
-  // Sync any pending edits first
-  await syncEditsToServer();
-  
-  // Show loading state
   const submitBtn = document.getElementById("submitBulkBtn");
-  const originalText = submitBtn.innerHTML;
-  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+  const origText  = submitBtn.innerHTML;
   submitBtn.disabled = true;
-  
+
+  const SAVE_FIELDS = [
+    "first_name","last_name","email","mobile_number",
+    "country","nationality","company_name","job_title","ticket_type",
+    "accepted_terms","accepted_data_sharing","accepted_marketing",
+    "digital_badge_issued","onsite_badge_printed",
+  ];
+
+  const CHUNK_SIZE = 5000; // ~100KB per chunk — safe under any Django limit
+
+  const validRows = allRows
+    .filter(r => r.status === "valid")
+    .map(r => {
+      const out = {};
+      SAVE_FIELDS.forEach(f => { out[f] = r[f] ?? null; });
+      return out;
+    });
+
+  if (!validRows.length) {
+    await showNotificationModal('Nothing to Save', 'There are no valid rows to import.', 'warning');
+    submitBtn.disabled = false;
+    return;
+  }
+
+  // Split into chunks
+  const chunks = [];
+  for (let i = 0; i < validRows.length; i += CHUNK_SIZE) {
+    chunks.push(validRows.slice(i, i + CHUNK_SIZE));
+  }
+
   try {
-    // Send empty object - server will read from session
-    const data = await postJSON("/bulk-upload-save/", {});
-    
-    if (!data.success) { 
-      await showNotificationModal('Submission Failed', data.errors || 'Failed to save records. Please check your data.', 'error');
-      submitBtn.innerHTML = originalText;
-      submitBtn.disabled = false;
-      return; 
+    // POST all chunks — sequentially to avoid hammering the server
+    const taskIds = [];
+    for (let i = 0; i < chunks.length; i++) {
+      submitBtn.innerHTML =
+        `<i class="fas fa-spinner fa-spin me-2"></i>Uploading`;
+
+      const data = await postJSON("/bulk-upload-save/", {
+        rows       : chunks[i],
+        chunk_index: i,
+        total_chunks: chunks.length,
+      });
+
+      if (!data.success) {
+        await showNotificationModal('Upload Failed',
+          `Chunk ${i + 1} failed: ${data.errors || 'Unknown error'}`, 'error');
+        submitBtn.innerHTML = origText;
+        submitBtn.disabled  = false;
+        return;
+      }
+      taskIds.push(data.task_id);
     }
-    const result = await pollTaskStatus(data.task_id);
-    
+
+    // Poll all tasks in parallel
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing…';
+    const results = await Promise.all(taskIds.map(id => pollTaskStatus(id)));
+
+    // Aggregate results across all chunks
+    const totalCreated = results.reduce((s, r) => s + (r.created || 0), 0);
+    const totalSkipped = results.reduce((s, r) => s + (r.skipped || 0), 0);
+    const totalValid   = results.reduce((s, r) => s + (r.total_valid || 0), 0);
+
     await showNotificationModal(
-  'Import Complete',
-  `<strong>${result.created}</strong> record(s) created.<br>
-   <strong>${result.skipped}</strong> record(s) skipped.<br>
-   Total valid rows: <strong>${result.total_valid}</strong>`,
-  'success'
-);
-    
-    // Close modal and reload page
+      'Import Complete',
+      `<strong>${totalCreated}</strong> record(s) created.<br>
+       <strong>${totalSkipped}</strong> record(s) skipped.<br>
+       Total valid rows: <strong>${totalValid}</strong>`,
+      'success'
+    );
+
     bootstrap.Modal.getInstance(document.getElementById("bulkPreviewModal")).hide();
-    submitBtn.innerHTML = originalText;
-    submitBtn.disabled = false;
-    // location.reload();
-    
+    submitBtn.innerHTML = origText;
+    submitBtn.disabled  = false;
+
   } catch (error) {
-    console.error("Submit error:", error);
-    await showNotificationModal('Unexpected Error', 'Something went wrong. Please try again.', 'error');
-    submitBtn.innerHTML = originalText;
-    submitBtn.disabled = false;
+    console.error(error);
+    await showNotificationModal('Unexpected Error', error.message || 'Something went wrong.', 'error');
+    submitBtn.innerHTML = origText;
+    submitBtn.disabled  = false;
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// Poll /bulk-task-status/<task_id>/ every 1.5s until done
-// ─────────────────────────────────────────────────────────────
-function pollTaskStatus(taskId, intervalMs = 1500, timeoutMs = 120000) {
+// ═════════════════════════════════════════════════════════════
+// CELERY TASK POLLER
+// ═════════════════════════════════════════════════════════════
+
+function pollTaskStatus(taskId, intervalMs = 1500, timeoutMs = 600000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
-
-    const interval = setInterval(async () => {
+    const iv = setInterval(async () => {
       try {
-        // Timeout guard
         if (Date.now() - start > timeoutMs) {
-          clearInterval(interval);
+          clearInterval(iv);
           reject(new Error("Task timed out. Please check your records manually."));
           return;
         }
-
-        const res = await fetch(`/bulk-task-status/${taskId}/`);
-        const json = await res.json();
-
-        if (json.state === "SUCCESS") {
-          clearInterval(interval);
-          resolve(json);
-        } else if (json.state === "FAILURE") {
-          clearInterval(interval);
-          reject(new Error(json.error || "Task failed"));
-        }
-        // PENDING / STARTED → keep polling
-
-      } catch (err) {
-        clearInterval(interval);
-        reject(err);
-      }
+        const json = await fetch(`/bulk-task-status/${taskId}/`).then(r => r.json());
+        if      (json.state === "SUCCESS") { clearInterval(iv); resolve(json); }
+        else if (json.state === "FAILURE") { clearInterval(iv); reject(new Error(json.error || "Task failed")); }
+      } catch (err) { clearInterval(iv); reject(err); }
     }, intervalMs);
-  });
+  }); 
 }
-
-// ─────────────────────────────────────────────────────────────
-// Recalculate tab counts from current DOM rows + server totals
-// ─────────────────────────────────────────────────────────────
-
-// ── recalculateTabCounts: re-fetch counts from server after row edits ──
-async function recalculateTabCounts() {
-  // After a Check, re-fetch just page 1 of current filter to get fresh counts
-  // But don't re-render the table — just update the badges
-  const file = document.getElementById("bulkFile").files[0];
-  if (!file) return;
-
-  const fd = new FormData();
-  fd.append("file", file);
-  fd.append("mapping", JSON.stringify(pagination.savedMapping));
-  fd.append("page", pagination.currentPage);
-  fd.append("page_size", pagination.pageSize);
-  fd.append("filter", pagination.activeTab);
-
-  try {
-    const data = await postFormData("/bulk-upload-preview/", fd);
-    updateTabCounts(data.valid_count, data.invalid_count, data.total_all);
-  } catch(e) {
-    console.error("Count refresh failed", e);
-  }
-}
-
 </script>
