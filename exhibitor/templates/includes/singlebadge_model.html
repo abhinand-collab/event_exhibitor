@@ -7,11 +7,11 @@
             <span id="globalFormErrorMsg"></span>
         </div>
         <div id="globalFormSuccess"
-     style="display:none; background:#f0fdf4; border:1px solid #2ecc71; color:#27ae60; padding:12px 16px; border-radius:6px; margin-bottom:16px; font-size:14px;">
-    
-    <i class="fas fa-check-circle me-2"></i>
-    <span id="globalFormSuccessMsg"></span>
-</div>
+            style="display:none; background:#f0fdf4; border:1px solid #2ecc71; color:#27ae60; padding:12px 16px; border-radius:6px; margin-bottom:16px; font-size:14px;">
+
+            <i class="fas fa-check-circle me-2"></i>
+            <span id="globalFormSuccessMsg"></span>
+        </div>
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label class="form-label" style="font-weight: 600; color: #333;">First Name <span
@@ -22,10 +22,10 @@
                 </div>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label" style="font-weight: 600; color: #333;">Last Name 
+                <label class="form-label" style="font-weight: 600; color: #333;">Last Name
                     <span class="text-danger"></span></label>
                 <input type="text" name="last_name" class="form-control" id="lastName" placeholder="Enter your lastname"
-                     style="border: 1px solid #ddd; padding: 10px 12px;">
+                    style="border: 1px solid #ddd; padding: 10px 12px;">
                 <div class="validation-error" id="lastNameError"><i class="fas fa-exclamation-circle"></i><span></span>
                 </div>
             </div>
@@ -33,7 +33,7 @@
 
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label" style="font-weight: 600; color: #333;">Job Title 
+                <label class="form-label" style="font-weight: 600; color: #333;">Job Title
                     <span class="text-danger"></span></label>
                 <input type="text" name="job_title" class="form-control" id="jobTitle"
                     placeholder="Enter your job title" style="border: 1px solid #ddd; padding: 10px 12px;">
@@ -41,7 +41,7 @@
                 </div>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label" style="font-weight: 600; color: #333;">Company Name 
+                <label class="form-label" style="font-weight: 600; color: #333;">Company Name
                     <span class="text-danger"></span></label>
                 <input type="text" name="company_name" class="form-control" id="companyName"
                     placeholder="Enter your company name" style="border: 1px solid #ddd; padding: 10px 12px;">
@@ -54,15 +54,16 @@
             <div class="col-md-6 mb-3">
                 <label class="form-label" style="font-weight: 600; color: #333;">Country of Residence <span
                         class="text-danger">*</span></label>
-                <input type="text" name="country_of_residence" class="form-control" id="countryResidence" 
-                    placeholder="Enter country of residence" required style="border: 1px solid #ddd; padding: 10px 12px;">
+                <input type="text" name="country_of_residence" class="form-control" id="countryResidence"
+                    placeholder="Enter country of residence" required
+                    style="border: 1px solid #ddd; padding: 10px 12px;">
                 <div class="validation-error" id="countryResidenceError"><i
                         class="fas fa-exclamation-circle"></i><span></span></div>
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label" style="font-weight: 600; color: #333;">Nationality <span
                         class="text-danger">*</span></label>
-                <input type="text" name="nationality" class="form-control" id="nationality" 
+                <input type="text" name="nationality" class="form-control" id="nationality"
                     placeholder="Enter nationality" required style="border: 1px solid #ddd; padding: 10px 12px;">
                 <div class="validation-error" id="nationalityError"><i
                         class="fas fa-exclamation-circle"></i><span></span></div>
@@ -79,7 +80,7 @@
                 </div>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label" style="font-weight: 600; color: #333;">Mobile Number 
+                <label class="form-label" style="font-weight: 600; color: #333;">Mobile Number
                     <span class="text-danger"></span></label>
                 <div class="phone-input-wrapper">
                     <input type="tel" class="form-control" name="mobile_number" id="mobileNumber"
@@ -155,143 +156,176 @@
     </form>
 </div>
 
+<!-- Success Modal -->
+<div class="modal fade" id="badgeSuccessModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+        <div class="modal-content" style="border:none;border-radius:12px;overflow:hidden;">
+
+            <div class="modal-body text-center" style="padding:40px 30px;">
+                <!-- Icon -->
+                <div style="width:72px;height:72px;background:#d1fae5;border-radius:50%;
+                    display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px;">
+                    <i class="fas fa-check" style="font-size:32px;color:#059669;"></i>
+                </div>
+
+                <h5 style="font-weight:700;color:#111;margin-bottom:8px;">Registration Successful!</h5>
+                <p id="badgeSuccessMsg" style="color:#555;font-size:14px;margin-bottom:24px;"></p>
+
+                <button type="button" class="btn px-5 py-2" id="badgeSuccessOkBtn"
+                    style="background:#e74c3c;color:white;border:none;border-radius:6px;font-weight:600;">
+                    OK
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
 
-        // ✅ Initialize Select2 FIRST
-        $('.select2-modal').select2({
-            dropdownParent: $('.modal')
-        });
+    // ✅ REMOVED Select2 init here — base.html already handles it
+    //    inside shown.bs.modal on #createBadgeModal
 
-        // ✅ Form submit
-        document.getElementById("createBadgeForm").addEventListener("submit", function (e) {
-            e.preventDefault();
+    // Move success modal to body to avoid nesting issues with parent modal
+    const successModal = document.getElementById("badgeSuccessModal");
+    if (successModal && successModal.parentElement !== document.body) {
+        document.body.appendChild(successModal);
+    }
 
-            const form = this;
-            const formData = new FormData(form);
-
-            document.querySelectorAll(".validation-error span").forEach(el => el.innerText = "");
-            document.querySelectorAll(".form-control, .form-select").forEach(el => el.style.border = "1px solid #ddd");
-
-            fetch(form.action, {
-                method: "POST",
-                body: formData,
-                headers: {
-                    "X-CSRFToken": getCSRFToken()
-                }
-            })
-                .then(res => res.json().then(data => ({ status: res.status, body: data })))
-                .then(({ status, body }) => {
-
-                    document.getElementById("globalFormError").style.display = "none";
-                    document.getElementById("globalFormSuccess").style.display = "none";
-
-                    if (!body.success) {
-
-                        if (typeof body.errors === "string") {
-                            document.getElementById("globalFormErrorMsg").innerText = body.errors;
-                            document.getElementById("globalFormError").style.display = "block";
-                            document.querySelector(".modal-body").scrollTop = 0;
-                            return;
-                        }
-
-                        for (let field in body.errors) {
-
-                            let errorDiv = document.getElementById(fieldMap[field]);
-
-                            if (errorDiv) {
-                                let span = errorDiv.querySelector("span");
-                                if (span) {
-                                    span.innerText = body.errors[field];
-                                    errorDiv.style.display = "block";
-                                }
-                            }
-
-                            let input = document.querySelector(`[name="${field}"]`);
-                            if (input) input.style.border = "1px solid red";
-                        }
-
-                    } else {
-                        form.reset();
-                        // ✅ reset all Select2 fields
-                        $('.select2-modal').val(null).trigger('change');
-                        console.log("checksuccessss")
-                        if (typeof body.message === "string") {
-                            document.getElementById("globalFormSuccessMsg").innerText = body.message;
-                            document.getElementById("globalFormSuccess").style.display = "block";
-                            document.querySelector(".modal-body").scrollTop = 0;
-                            return;
-                        }
-                        
-
-                        document.querySelectorAll(".validation-error").forEach(el => el.style.display = "none");
-                        document.querySelectorAll(".validation-error span").forEach(el => el.innerText = "");
-                        document.querySelectorAll(".form-control, .form-select").forEach(el => el.style.border = "1px solid #ddd");
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    if (err) {
-                            document.getElementById("globalFormErrorMsg").innerText = "Something Went Wrong";
-                            document.getElementById("globalFormError").style.display = "block";
-                            document.querySelector(".modal-body").scrollTop = 0;
-                            return;
-                        }
-
-                });
-        });
-
-        function getCSRFToken() {
-            return document.cookie
-                .split("; ")
-                .find(row => row.startsWith("csrftoken"))
-                ?.split("=")[1];
-        }
-
-        const fieldMap = {
-            first_name: "firstNameError",
-            last_name: "lastNameError",
-            job_title: "jobTitleError",
-            company_name: "companyNameError",
-            country_of_residence: "countryResidenceError",
-            nationality: "nationalityError",
-            email: "emailError",
-            mobile_number: "mobileNumberError",
-            ticket_type: "ticketTypeError"
-        };
-
-        // ✅ Normal inputs
-        document.querySelectorAll(".form-control").forEach(input => {
-            input.addEventListener("input", function () {
-                clearFieldError(this.name);
-            });
-        });
-
-        document.querySelectorAll(".form-select").forEach(input => {
-            input.addEventListener("change", function () {
-                clearFieldError(this.name);
-            });
-        });
-
-        // ✅ 🔥 IMPORTANT: Select2 change event
-        $('.select2-modal').on('select2:select', function () {
-            clearFieldError(this.name);
-        });
-
-        function clearFieldError(fieldName) {
-            const errorId = fieldMap[fieldName];
-            if (!errorId) return;
-
-            const errorDiv = document.getElementById(errorId);
-            if (errorDiv) {
-                const span = errorDiv.querySelector("span");
-                if (span) span.innerText = "";
-                errorDiv.style.display = "none";
-            }
-
-            const input = document.querySelector(`[name="${fieldName}"]`);
-            if (input) input.style.border = "1px solid #ddd";
-        }
-
+    document.getElementById("badgeSuccessOkBtn").addEventListener("click", function () {
+        const modalEl = document.getElementById("badgeSuccessModal");
+        const modal = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+        if (modal) modal.hide();
+        window.location.href = window.location.pathname;
     });
+
+    document.getElementById("createBadgeForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const form = this;
+        const formData = new FormData(form);
+
+        document.querySelectorAll(".validation-error span").forEach(el => el.innerText = "");
+        document.querySelectorAll(".form-control, .form-select").forEach(el => el.style.border = "1px solid #ddd");
+
+        fetch(form.action, {
+            method: "POST",
+            body: formData,
+            headers: { "X-CSRFToken": getCSRFToken() }
+        })
+        .then(res => res.json().then(data => ({ status: res.status, body: data })))
+        .then(({ status, body }) => {
+
+            document.getElementById("globalFormError").style.display = "none";
+            document.getElementById("globalFormSuccess").style.display = "none";
+
+            if (!body.success) {
+
+                if (typeof body.errors === "string") {
+                    document.getElementById("globalFormErrorMsg").innerText = body.errors;
+                    document.getElementById("globalFormError").style.display = "block";
+                    // ✅ FIX: target specific modal-body, not first one on page
+                    document.getElementById("createBadgeModal").querySelector(".modal-body").scrollTop = 0;
+                    return;
+                }
+
+                for (let field in body.errors) {
+                    let errorDiv = document.getElementById(fieldMap[field]);
+                    if (errorDiv) {
+                        let span = errorDiv.querySelector("span");
+                        if (span) {
+                            span.innerText = body.errors[field];
+                            errorDiv.style.display = "block";
+                        }
+                    }
+                    let input = document.querySelector(`[name="${field}"]`);
+                    if (input) input.style.border = "1px solid red";
+                }
+
+            } else {
+
+    form.reset();
+    $('.select2-modal').val(null).trigger('change');
+
+    document.querySelectorAll(".validation-error").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".validation-error span").forEach(el => el.innerText = "");
+    document.querySelectorAll(".form-control, .form-select").forEach(el => el.style.border = "1px solid #ddd");
+
+    document.getElementById("badgeSuccessMsg").innerText = body.message || "Badge registered successfully.";
+
+    const createModalEl = document.getElementById('createBadgeModal');
+
+    createModalEl.addEventListener('hidden.bs.modal', function handler() {
+        createModalEl.removeEventListener('hidden.bs.modal', handler);
+
+        // Force-clean any stuck backdrop before showing next modal
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+
+        // Small delay to let DOM settle
+        setTimeout(() => {
+            const successModalEl = document.getElementById("badgeSuccessModal");
+            const successModal = bootstrap.Modal.getOrCreateInstance(successModalEl);
+            successModal.show();
+        }, 100);
+    });
+
+    // Use getOrCreateInstance — works whether opened via JS or data-bs-toggle
+    bootstrap.Modal.getOrCreateInstance(createModalEl).hide();
+}
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById("globalFormErrorMsg").innerText = "Something Went Wrong";
+            document.getElementById("globalFormError").style.display = "block";
+            // ✅ FIX: target specific modal-body
+            document.getElementById("createBadgeModal").querySelector(".modal-body").scrollTop = 0;
+        });
+    });
+
+    function getCSRFToken() {
+        return document.cookie.split("; ").find(row => row.startsWith("csrftoken"))?.split("=")[1];
+    }
+
+    const fieldMap = {
+        first_name: "firstNameError",
+        last_name: "lastNameError",
+        job_title: "jobTitleError",
+        company_name: "companyNameError",
+        country_of_residence: "countryResidenceError",
+        nationality: "nationalityError",
+        email: "emailError",
+        mobile_number: "mobileNumberError",
+        ticket_type: "ticketTypeError"
+    };
+
+    document.querySelectorAll(".form-control").forEach(input => {
+        input.addEventListener("input", function () { clearFieldError(this.name); });
+    });
+
+    document.querySelectorAll(".form-select").forEach(input => {
+        input.addEventListener("change", function () { clearFieldError(this.name); });
+    });
+
+    $('.select2-modal').on('select2:select', function () {
+        clearFieldError(this.name);
+    });
+
+    function clearFieldError(fieldName) {
+        const errorId = fieldMap[fieldName];
+        if (!errorId) return;
+        const errorDiv = document.getElementById(errorId);
+        if (errorDiv) {
+            const span = errorDiv.querySelector("span");
+            if (span) span.innerText = "";
+            errorDiv.style.display = "none";
+        }
+        const input = document.querySelector(`[name="${fieldName}"]`);
+        if (input) input.style.border = "1px solid #ddd";
+    }
+
+});
 </script>

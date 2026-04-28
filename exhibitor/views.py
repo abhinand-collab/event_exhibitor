@@ -17,10 +17,11 @@ from .forms import CreateBadgeForm
 from .models import User, Exhibitor, Event, Badge, Attendee
 from math import ceil
 from django.core.paginator import Paginator
-from .tasks import bulk_upload_save_task,send_invite_email
+from .tasks import bulk_upload_save_task,send_invite_email,process_invitations_batch
 from celery.result import AsyncResult
 from django.http import HttpResponse
 import openpyxl
+import re
 
 
 # =============================================================================
@@ -60,7 +61,7 @@ def index(request):
 
     registrations_qs = Attendee.objects.filter(
         exhibitor=exhibitor
-    ).select_related("badge", "exhibitor").order_by("-id")
+    ).select_related("badge", "exhibitor").order_by("-created_at")
 
     # ── Filters ─────────────────────────────────────────────────────────────
     search    = request.GET.get("search", "").strip()
@@ -203,7 +204,7 @@ def create_single_badge(request):
                 nationality           = form.cleaned_data["nationality"],
                 attendee_type         = TICKET_TYPE_MAP[ticket_type],
                 source                = "Exhibitor Portal",
-                status                = Attendee.Status.PENDING,
+                status                = Attendee.Status.CONFIRMED,
                 accepted_terms        = form.cleaned_data["accepted_terms"],
                 accepted_data_sharing = form.cleaned_data["accepted_data_sharing"],
                 accepted_marketing    = form.cleaned_data.get("accepted_marketing", False),
@@ -750,74 +751,95 @@ def export_registrations(request):
     response["Content-Disposition"] = 'attachment; filename="registrations.xlsx"'
     wb.save(response)
     return response
+
+
+# @login_required
+# @require_POST
+# def send_invitations(request):
+#     try:
+#         data    = json.loads(request.body)
+#         entries = data.get('entries', [])
+#     except json.JSONDecodeError:
+#         return JsonResponse({'success': False, 'error': 'Invalid JSON.'}, status=400)
+
+#     if not entries:
+#         return JsonResponse({'success': False, 'error': 'No entries provided.'}, status=400)
+
+#     exhibitor = request.user.exhibitor
+#     event     = exhibitor.event
+
+#     sent_count    = 0
+#     skipped_count = 0
+#     errors        = []   # human-readable skip reasons returned to frontend
+
+#     for entry in entries:
+#         first_name    = (entry.get("first_name") or "").strip()
+#         last_name     = (entry.get("last_name")  or "").strip()
+#         email         = (entry.get("email")      or "").strip().lower()
+#         attendee_type = (entry.get("ticket_type") or "").strip().upper()
+
+#         # ── Server-side guard (frontend already filters, but be safe) ──
+#         if not first_name or not email or not attendee_type:
+#             errors.append(f"{email or '(no email)'}: missing required fields — skipped")
+#             skipped_count += 1
+#             continue
+
+#         try:
+#             attendee = Attendee.objects.create(
+#                 event         = event,
+#                 exhibitor     = exhibitor,
+#                 first_name    = first_name,
+#                 last_name     = last_name,
+#                 email         = email,
+#                 attendee_type = attendee_type,
+#                 status        = Attendee.Status.INVITED,
+#             )
+#             # Fire Celery task
+#             send_invite_email.delay(attendee.email, str(attendee.invite_token))
+#             sent_count += 1
+
+#         except IntegrityError:
+#             errors.append(f"{email}: already registered — skipped")
+#             skipped_count += 1
+#         except Exception as e:
+#             errors.append(f"{email}: {str(e)} — skipped")
+#             skipped_count += 1
+
+#     return JsonResponse({
+#         'success'       : True,
+#         'sent_count'    : sent_count,
+#         'skipped_count' : skipped_count,
+#         'errors'        : errors,
+#         'message'       : f'{sent_count} invitation(s) sent, {skipped_count} skipped.',
+#     })
+
+
 @login_required
-@require_POST
+@require_POST  
 def send_invitations(request):
-    try:
-        data    = json.loads(request.body)
-        entries = data.get('entries', [])
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON.'}, status=400)
+    data = json.loads(request.body)
+    entries = data.get('entries', [])
 
-    if not entries:
-        return JsonResponse({'success': False, 'error': 'No entries provided.'}, status=400)
-
-    exhibitor = request.user.exhibitor
-    event     = exhibitor.event
-
-    sent_count    = 0
-    skipped_count = 0
-    errors        = []   # human-readable skip reasons returned to frontend
-
-    for entry in entries:
-        first_name    = (entry.get("first_name") or "").strip()
-        last_name     = (entry.get("last_name")  or "").strip()
-        email         = (entry.get("email")      or "").strip().lower()
-        attendee_type = (entry.get("ticket_type") or "").strip().upper()
-
-        # ── Server-side guard (frontend already filters, but be safe) ──
-        if not first_name or not email or not attendee_type:
-            errors.append(f"{email or '(no email)'}: missing required fields — skipped")
-            skipped_count += 1
-            continue
-
-        try:
-            attendee = Attendee.objects.create(
-                event         = event,
-                exhibitor     = exhibitor,
-                first_name    = first_name,
-                last_name     = last_name,
-                email         = email,
-                attendee_type = attendee_type,
-                status        = Attendee.Status.INVITED,
-            )
-            # Fire Celery task
-            send_invite_email.delay(attendee.email, str(attendee.invite_token))
-            sent_count += 1
-
-        except IntegrityError:
-            errors.append(f"{email}: already registered — skipped")
-            skipped_count += 1
-        except Exception as e:
-            errors.append(f"{email}: {str(e)} — skipped")
-            skipped_count += 1
+    task = process_invitations_batch.delay(
+        entries=entries,
+        exhibitor_id=request.user.exhibitor.id,
+    )
 
     return JsonResponse({
-        'success'       : True,
-        'sent_count'    : sent_count,
-        'skipped_count' : skipped_count,
-        'errors'        : errors,
-        'message'       : f'{sent_count} invitation(s) sent, {skipped_count} skipped.',
+        'success': True,
+        'task_id': task.id,
+        'message': f'Processing {len(entries)} entries in background.'
     })
 
 def register_attendee(request, token):
     attendee = get_object_or_404(Attendee, invite_token=token)
  
-    # Already confirmed — render the template (it will show the success screen)
+    # Already confirmed — render template (JS will show success screen)
     if attendee.status == Attendee.Status.CONFIRMED:
         return render(request, "invite_registration.html", {"attendee": attendee})
  
     errors = []
+    NAME_RE = re.compile(r"^[a-zA-Z \-'.]+$")
  
     if request.method == "POST":
         mobile      = request.POST.get("mobile", "").strip()
@@ -826,60 +848,75 @@ def register_attendee(request, token):
         nationality = request.POST.get("nationality", "").strip()
         job_title   = request.POST.get("job_title", "").strip()
  
-        # Checkbox values — present in POST only when checked
+        # Only terms is required; data sharing and marketing are optional
         accepted_terms        = bool(request.POST.get("accepted_terms"))
         accepted_data_sharing = bool(request.POST.get("accepted_data_sharing"))
         accepted_marketing    = bool(request.POST.get("accepted_marketing"))
  
-        # ── Server-side validation ──────────────────────────────────────────
+        # ── Validation (mirrors front-end rules) ────────────────────────────
+ 
+        # mobile
         if not mobile:
             errors.append("Mobile number is required.")
+ 
+        # company
         if not company:
             errors.append("Company name is required.")
+        elif len(company) < 2:
+            errors.append("Company name must be at least 2 characters.")
+ 
+        # country — text input, letters only
         if not country:
             errors.append("Country of residence is required.")
+        elif len(country) < 2:
+            errors.append("Please enter a valid country.")
+        elif not NAME_RE.match(country):
+            errors.append("Country should only contain letters.")
+ 
+        # nationality — letters only
         if not nationality:
             errors.append("Nationality is required.")
+        elif len(nationality) < 2:
+            errors.append("Please enter a valid nationality.")
+        elif not NAME_RE.match(nationality):
+            errors.append("Nationality should only contain letters.")
+ 
+        # terms — only required consent
         if not accepted_terms:
             errors.append("You must accept the Terms & Conditions.")
-        if not accepted_data_sharing:
-            errors.append("Consent to data sharing is required.")
  
         if not errors:
-            exhibitor = attendee.exhibitor  # assuming relation exists
-
+            exhibitor = attendee.exhibitor
+ 
             used_pass = Attendee.objects.filter(
                 exhibitor=exhibitor,
-                status=Attendee.Status.CONFIRMED
+                status=Attendee.Status.CONFIRMED,
             ).count()
-
+ 
             if used_pass >= exhibitor.pass_limit:
                 errors.append("Pass limit exceeded. Cannot register more attendees.")
             else:
-                # SAFE TO SAVE
-                attendee.mobile_number        = mobile
-                attendee.company_name         = company
-                attendee.country_of_residence = country
-                attendee.nationality          = nationality
-                attendee.job_title            = job_title
-                attendee.accepted_terms       = accepted_terms
+                attendee.mobile_number         = mobile
+                attendee.company_name          = company
+                attendee.country_of_residence  = country
+                attendee.nationality           = nationality
+                attendee.job_title             = job_title
+                attendee.accepted_terms        = accepted_terms
                 attendee.accepted_data_sharing = accepted_data_sharing
-                attendee.accepted_marketing   = accepted_marketing
-                attendee.source               = "Invitation Portal"
-                attendee.status               = Attendee.Status.CONFIRMED
+                attendee.accepted_marketing    = accepted_marketing
+                attendee.source                = "Invitation Portal"
+                attendee.status                = Attendee.Status.CONFIRMED
                 attendee.save()
 
                 Badge.objects.create(
-                    attendee=attendee,
-                    badge_type=attendee.attendee_type,
+                    attendee   = attendee,
+                    badge_type = attendee.attendee_type,
                 )
-
  
-            # Re-render the same template — JS will switch to success screen
-            # because attendee.status is now CONFIRMED
+            # Re-render — JS switches to success screen when status == CONFIRMED
             return render(request, "invite_registration.html", {"attendee": attendee})
  
     return render(request, "invite_registration.html", {
         "attendee": attendee,
-        "errors": errors,
+        "errors"  : errors,
     })

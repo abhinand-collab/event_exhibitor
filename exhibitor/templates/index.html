@@ -458,24 +458,29 @@ document.getElementById('saveEditBtn').addEventListener('click', function () {
             return;
         }
 
-        // ── Success: update the row in-place ─────────────────────────────────
-        showEditGlobalSuccess(body.message || 'Registration updated successfully.');
+        // ── Success: Hide edit modal and show success modal ────────────────
+        const editModalEl = document.getElementById('editBadgeModal');
+        const editModal = bootstrap.Modal.getOrCreateInstance(editModalEl);
 
-        const row = document.querySelector(`tr[data-attendee-id="${attendeeId}"]`);
-        if (row && body.attendee) {
-            const a = body.attendee;
-            row.querySelector('.name').textContent  = `${a.first_name} ${a.last_name}`.trim();
-            row.querySelector('.email').textContent = a.email;
-            row.cells[2].textContent = a.job_title    || '';
-            row.cells[6].textContent = a.company_name || '';
-            row.cells[4].textContent = a.ticket_class || '-';
+        document.getElementById("badgeSuccessMsg").innerText = body.message || "Registration updated successfully.";
 
-            const badge = row.cells[9].querySelector('.status-badge');
-            if (badge) {
-                badge.className   = `status-badge ${a.status.toLowerCase()}`;
-                badge.textContent = a.status_display;
-            }
-        }
+        editModalEl.addEventListener('hidden.bs.modal', function handler() {
+            editModalEl.removeEventListener('hidden.bs.modal', handler);
+            
+            // Force-clean backdrops
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+
+            setTimeout(() => {
+                const successModalEl = document.getElementById("badgeSuccessModal");
+                const successModal = bootstrap.Modal.getOrCreateInstance(successModalEl);
+                successModal.show();
+            }, 100);
+        });
+
+        editModal.hide();
     })
     .catch(() => showEditGlobalError('Network error. Please try again.'))
     .finally(() => {

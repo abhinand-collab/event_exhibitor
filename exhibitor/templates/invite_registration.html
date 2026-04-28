@@ -45,7 +45,6 @@
             inset: 0;
             background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
-
         .hero-badge-pill {
             display: inline-flex;
             align-items: center;
@@ -75,8 +74,6 @@
             font-weight: 300;
             position: relative;
         }
-
-        /* ticket type banner */
         .ticket-banner {
             display: inline-flex;
             align-items: center;
@@ -111,17 +108,13 @@
             position: relative;
             z-index: 1;
         }
-
         .card-header-strip {
             height: 4px;
             background: linear-gradient(90deg, var(--red) 0%, #ff7043 100%);
         }
+        .card-body { padding: 36px 40px; }
 
-        .card-body {
-            padding: 36px 40px;
-        }
-
-        /* greeting row */
+        /* greeting */
         .greeting {
             display: flex;
             align-items: center;
@@ -144,13 +137,9 @@
             color: var(--ink);
             line-height: 1.3;
         }
-        .greeting-text p {
-            font-size: 13px;
-            color: var(--slate);
-            margin-top: 3px;
-        }
+        .greeting-text p { font-size: 13px; color: var(--slate); margin-top: 3px; }
 
-        /* prefilled row */
+        /* prefilled */
         .prefilled-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -172,11 +161,7 @@
             display: block;
             margin-bottom: 4px;
         }
-        .prefilled-item span {
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--ink);
-        }
+        .prefilled-item span { font-size: 15px; font-weight: 500; color: var(--ink); }
 
         /* section title */
         .section-title {
@@ -190,12 +175,7 @@
             align-items: center;
             gap: 8px;
         }
-        .section-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--line);
-        }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 
         /* form */
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -212,7 +192,7 @@
         }
         .form-group label .req { color: var(--red); margin-left: 2px; }
 
-        .form-control, .form-select {
+        .form-control {
             width: 100%;
             border: 1.5px solid var(--line);
             border-radius: 10px;
@@ -223,33 +203,16 @@
             background: var(--white);
             transition: border-color 0.2s, box-shadow 0.2s;
             outline: none;
-            appearance: none;
         }
-        .form-control:focus, .form-select:focus {
+        .form-control:focus {
             border-color: var(--red);
             box-shadow: 0 0 0 3px rgba(231,76,60,0.12);
         }
         .form-control.error { border-color: var(--red); }
-        .error-msg {
-            font-size: 12px;
-            color: var(--red);
-            margin-top: 5px;
-            display: none;
-        }
+        .error-msg { font-size: 12px; color: var(--red); margin-top: 5px; display: none; }
         .error-msg.show { display: block; }
 
-        /* phone prefix */
-        .phone-wrap { display: flex; gap: 0; }
-        .phone-wrap .form-control:first-child {
-            width: 90px;
-            border-radius: 10px 0 0 10px;
-            border-right: none;
-            color: var(--slate);
-            flex-shrink: 0;
-        }
-        .phone-wrap .form-control:last-child { border-radius: 0 10px 10px 0; }
-
-        /* ── CONSENT CHECKBOXES ── */
+        /* ── CONSENT ── */
         .consent-block {
             background: var(--mist);
             border: 1px solid var(--line);
@@ -295,7 +258,7 @@
             font-weight: 600;
             margin-bottom: 2px;
         }
-        .consent-label .req-badge {
+        .req-badge {
             display: inline-block;
             background: rgba(231,76,60,0.1);
             color: var(--red);
@@ -308,7 +271,7 @@
             margin-left: 6px;
             vertical-align: middle;
         }
-        .consent-label .opt-badge {
+        .opt-badge {
             display: inline-block;
             background: rgba(74,74,106,0.08);
             color: var(--slate);
@@ -321,12 +284,7 @@
             margin-left: 6px;
             vertical-align: middle;
         }
-        .consent-err {
-            font-size: 11px;
-            color: var(--red);
-            margin-top: 4px;
-            display: none;
-        }
+        .consent-err { font-size: 11px; color: var(--red); margin-top: 4px; display: none; }
         .consent-err.show { display: block; }
 
         /* submit */
@@ -353,19 +311,10 @@
         .btn-submit:active { transform: translateY(0); }
         .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
-        .terms-note {
-            text-align: center;
-            font-size: 12px;
-            color: var(--slate);
-            margin-top: 14px;
-        }
+        .terms-note { text-align: center; font-size: 12px; color: var(--slate); margin-top: 14px; }
 
-        /* ── SUCCESS STATE ── */
-        .success-screen {
-            display: none;
-            text-align: center;
-            padding: 60px 40px;
-        }
+        /* ── SUCCESS ── */
+        .success-screen { display: none; text-align: center; padding: 60px 40px; }
         .success-screen.show { display: block; }
         .success-icon {
             width: 80px; height: 80px;
@@ -377,10 +326,7 @@
             animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
         }
         @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .success-screen h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 28px; color: var(--ink); margin-bottom: 10px;
-        }
+        .success-screen h2 { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--ink); margin-bottom: 10px; }
         .success-screen p { color: var(--slate); font-size: 15px; line-height: 1.6; }
         .badge-preview {
             display: inline-block;
@@ -399,7 +345,6 @@
         .alert-danger { background: #fdf2f2; border: 1px solid #f5c6cb; color: #c0392b; }
         .alert i { margin-top: 2px; flex-shrink: 0; }
 
-        /* responsive */
         @media (max-width: 640px) {
             .card-body { padding: 24px 20px; }
             .form-row { grid-template-columns: 1fr; }
@@ -438,23 +383,25 @@
 
         <!-- Greeting -->
         <div class="greeting">
-            <div class="greeting-avatar">
-                <i class="fas fa-user"></i>
-            </div>
+            <div class="greeting-avatar"><i class="fas fa-user"></i></div>
             <div class="greeting-text">
                 <h2>Hello, {{ attendee.first_name }}!</h2>
                 <p>Please complete your registration to confirm your attendance.</p>
             </div>
         </div>
 
-        <!-- Pre-filled (read-only) info -->
+        <!-- Pre-filled read-only info — now split first / last -->
         <div class="section-title">Your Details</div>
         <div class="prefilled-grid">
             <div class="prefilled-item">
-                <label>Full Name</label>
-                <span>{{ attendee.first_name }} {{ attendee.last_name }}</span>
+                <label>First Name</label>
+                <span>{{ attendee.first_name }}</span>
             </div>
             <div class="prefilled-item">
+                <label>Last Name</label>
+                <span>{{ attendee.last_name|default:"—" }}</span>
+            </div>
+            <div class="prefilled-item" style="grid-column: 1 / -1;">
                 <label>Email Address</label>
                 <span style="word-break: break-all;">{{ attendee.email }}</span>
             </div>
@@ -497,38 +444,17 @@
                            value="{{ request.POST.job_title|default:'' }}">
                 </div>
                 <div class="form-group">
-                    <!-- spacer row so job title sits beside nothing; kept for layout balance -->
+                    <!-- layout spacer -->
                 </div>
             </div>
 
             <div class="form-row">
+                <!-- Country now a text input, same as nationality -->
                 <div class="form-group">
                     <label>Country of Residence <span class="req">*</span></label>
-                    <select name="country" class="form-select" id="fieldCountry">
-                        <option value="">Select country…</option>
-                        <option value="AE" {% if request.POST.country == "AE" %}selected{% endif %}>United Arab Emirates</option>
-                        <option value="SA" {% if request.POST.country == "SA" %}selected{% endif %}>Saudi Arabia</option>
-                        <option value="US" {% if request.POST.country == "US" %}selected{% endif %}>United States</option>
-                        <option value="GB" {% if request.POST.country == "GB" %}selected{% endif %}>United Kingdom</option>
-                        <option value="IN" {% if request.POST.country == "IN" %}selected{% endif %}>India</option>
-                        <option value="DE" {% if request.POST.country == "DE" %}selected{% endif %}>Germany</option>
-                        <option value="FR" {% if request.POST.country == "FR" %}selected{% endif %}>France</option>
-                        <option value="CN" {% if request.POST.country == "CN" %}selected{% endif %}>China</option>
-                        <option value="AU" {% if request.POST.country == "AU" %}selected{% endif %}>Australia</option>
-                        <option value="CA" {% if request.POST.country == "CA" %}selected{% endif %}>Canada</option>
-                        <option value="JP" {% if request.POST.country == "JP" %}selected{% endif %}>Japan</option>
-                        <option value="BR" {% if request.POST.country == "BR" %}selected{% endif %}>Brazil</option>
-                        <option value="ZA" {% if request.POST.country == "ZA" %}selected{% endif %}>South Africa</option>
-                        <option value="EG" {% if request.POST.country == "EG" %}selected{% endif %}>Egypt</option>
-                        <option value="NG" {% if request.POST.country == "NG" %}selected{% endif %}>Nigeria</option>
-                        <option value="KE" {% if request.POST.country == "KE" %}selected{% endif %}>Kenya</option>
-                        <option value="PK" {% if request.POST.country == "PK" %}selected{% endif %}>Pakistan</option>
-                        <option value="TR" {% if request.POST.country == "TR" %}selected{% endif %}>Turkey</option>
-                        <option value="IT" {% if request.POST.country == "IT" %}selected{% endif %}>Italy</option>
-                        <option value="ES" {% if request.POST.country == "ES" %}selected{% endif %}>Spain</option>
-                        <option value="NL" {% if request.POST.country == "NL" %}selected{% endif %}>Netherlands</option>
-                        <option value="OTHER" {% if request.POST.country == "OTHER" %}selected{% endif %}>Other</option>
-                    </select>
+                    <input type="text" name="country" class="form-control" id="fieldCountry"
+                           placeholder="e.g. United Arab Emirates"
+                           value="{{ request.POST.country|default:'' }}">
                     <div class="error-msg" id="errCountry"></div>
                 </div>
                 <div class="form-group">
@@ -540,12 +466,12 @@
                 </div>
             </div>
 
-            <!-- ── TERMS & CONSENTS ── -->
+            <!-- ── CONSENTS ── -->
             <div class="section-title" style="margin-bottom:16px; margin-top:4px;">Terms & Consent</div>
 
             <div class="consent-block">
 
-                <!-- T&C -->
+                <!-- T&C — REQUIRED -->
                 <div class="consent-item">
                     <input type="checkbox" class="consent-checkbox" name="accepted_terms"
                            id="chkTerms" {% if request.POST.accepted_terms %}checked{% endif %}>
@@ -564,7 +490,7 @@
                     </div>
                 </div>
 
-                <!-- Data Sharing -->
+                <!-- Data Sharing — OPTIONAL -->
                 <div class="consent-item">
                     <input type="checkbox" class="consent-checkbox" name="accepted_data_sharing"
                            id="chkData" {% if request.POST.accepted_data_sharing %}checked{% endif %}>
@@ -572,18 +498,15 @@
                         <label class="consent-label" for="chkData">
                             <strong>
                                 Data Sharing Policy
-                                <span class="req-badge">Required</span>
+                                <span class="opt-badge">Optional</span>
                             </strong>
-                            I consent to my registration details (name, company, job title and contact information)
-                            being shared with event organisers, exhibitors, and official partners for the purposes
-                            of event management, networking, and post-event communication in accordance with
-                            applicable data protection legislation.
+                            I consent to my registration details being shared with event organisers, exhibitors,
+                            and official partners for event management, networking, and post-event communication.
                         </label>
-                        <div class="consent-err" id="errData">Consent to data sharing is required to complete your registration.</div>
                     </div>
                 </div>
 
-                <!-- Marketing -->
+                <!-- Marketing — OPTIONAL -->
                 <div class="consent-item">
                     <input type="checkbox" class="consent-checkbox" name="accepted_marketing"
                            id="chkMarketing" {% if request.POST.accepted_marketing %}checked{% endif %}>
@@ -593,8 +516,8 @@
                                 Marketing Communications
                                 <span class="opt-badge">Optional</span>
                             </strong>
-                            I would like to receive updates, offers, and news about upcoming events, industry
-                            insights, and partner promotions via email. You may unsubscribe at any time.
+                            I would like to receive updates, offers, and news about upcoming events and partner
+                            promotions via email. You may unsubscribe at any time.
                         </label>
                     </div>
                 </div>
@@ -619,7 +542,6 @@
         <h2>You're Confirmed!</h2>
         <p>Your registration is complete. Your badge will be ready at the event entrance.<br>
         A confirmation email has been sent to <strong>{{ attendee.email }}</strong>.</p>
-
         <div class="badge-preview">
             <strong>{{ attendee.first_name }} {{ attendee.last_name }}</strong>
             {{ attendee.get_attendee_type_display }} Pass &nbsp;·&nbsp; {{ attendee.event.name }}
@@ -630,77 +552,130 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    // ✅ Get values from Django safely
     const attendeeStatus = "{{ attendee.status|default:'' }}";
-    const errorMessages = "{{ errors|join:', '|default:'' }}";
+    const errorMessages  = "{{ errors|join:', '|default:'' }}";
 
-    // ✅ Show success if already confirmed
+    /* ── Show success screen if already confirmed ── */
     if (attendeeStatus === "CONFIRMED") {
-        const formSection = document.getElementById('formSection');
-        const successSection = document.getElementById('successSection');
-
-        if (formSection) formSection.style.display = 'none';
-        if (successSection) successSection.classList.add('show');
+        document.getElementById('formSection').style.display   = 'none';
+        document.getElementById('successSection').classList.add('show');
     }
 
-    // ✅ Form validation
-    const form = document.getElementById('registrationForm');
+    /* ── Shared validation helpers ── */
+    const NAME_RE = /^[a-zA-Z \-'.]+$/;
 
+    function setError(fieldId, errId, msg) {
+        const field = document.getElementById(fieldId);
+        const err   = document.getElementById(errId);
+        if (!field || !err) return;
+        if (msg) {
+            field.classList.add('error');
+            err.textContent = msg;
+            err.classList.add('show');
+            return false;
+        } else {
+            field.classList.remove('error');
+            err.classList.remove('show');
+            return true;
+        }
+    }
+
+    function setCheckboxError(chkId, errId, show) {
+        const chk = document.getElementById(chkId);
+        const err = document.getElementById(errId);
+        if (!chk || !err) return;
+        if (show) {
+            chk.classList.add('error');
+            err.classList.add('show');
+        } else {
+            chk.classList.remove('error');
+            err.classList.remove('show');
+        }
+    }
+
+    /* ── Live clear on input ── */
+    ['fieldMobile','fieldCompany','fieldJobTitle','fieldCountry','fieldNationality'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', () => {
+            el.classList.remove('error');
+            const errMap = {
+                fieldMobile:      'errMobile',
+                fieldCompany:     'errCompany',
+                fieldCountry:     'errCountry',
+                fieldNationality: 'errNationality',
+            };
+            if (errMap[id]) {
+                const errEl = document.getElementById(errMap[id]);
+                if (errEl) errEl.classList.remove('show');
+            }
+        });
+    });
+
+    /* ── Form submit validation ── */
+    const form = document.getElementById('registrationForm');
     if (form) {
         form.addEventListener('submit', function (e) {
             let valid = true;
 
-            function setError(fieldId, errId, msg) {
-                const field = document.getElementById(fieldId);
-                const err = document.getElementById(errId);
-
-                if (!field || !err) return;
-
-                if (msg) {
-                    field.classList.add('error');
-                    err.textContent = msg;
-                    err.classList.add('show');
-                    valid = false;
-                } else {
-                    field.classList.remove('error');
-                    err.classList.remove('show');
-                }
-            }
-
-            function setCheckboxError(chkId, errId, show) {
-                const chk = document.getElementById(chkId);
-                const err = document.getElementById(errId);
-
-                if (!chk || !err) return;
-
-                if (show) {
-                    chk.classList.add('error');
-                    err.classList.add('show');
-                    valid = false;
-                } else {
-                    chk.classList.remove('error');
-                    err.classList.remove('show');
-                }
-            }
-
             const mobile      = document.getElementById('fieldMobile')?.value.trim();
             const company     = document.getElementById('fieldCompany')?.value.trim();
-            const country     = document.getElementById('fieldCountry')?.value;
+            const country     = document.getElementById('fieldCountry')?.value.trim();
             const nationality = document.getElementById('fieldNationality')?.value.trim();
             const terms       = document.getElementById('chkTerms')?.checked;
-            const dataShare   = document.getElementById('chkData')?.checked;
 
-            setError('fieldMobile',      'errMobile',      mobile ? null : 'Mobile number is required.');
-            setError('fieldCompany',     'errCompany',     company ? null : 'Company name is required.');
-            setError('fieldCountry',     'errCountry',     country ? null : 'Please select your country.');
-            setError('fieldNationality', 'errNationality', nationality ? null : 'Nationality is required.');
-            setCheckboxError('chkTerms', 'errTerms', !terms);
-            setCheckboxError('chkData',  'errData',  !dataShare);
-
-            if (!valid) {
-                e.preventDefault();
-                return;
+            /* mobile — required */
+            if (!mobile) {
+                setError('fieldMobile', 'errMobile', 'Mobile number is required.');
+                valid = false;
+            } else {
+                setError('fieldMobile', 'errMobile', null);
             }
+
+            /* company — required */
+            if (!company) {
+                setError('fieldCompany', 'errCompany', 'Company name is required.');
+                valid = false;
+            } else if (company.length < 2) {
+                setError('fieldCompany', 'errCompany', 'Company name must be at least 2 characters.');
+                valid = false;
+            } else {
+                setError('fieldCompany', 'errCompany', null);
+            }
+
+            /* country — required, letters only */
+            if (!country) {
+                setError('fieldCountry', 'errCountry', 'Country of residence is required.');
+                valid = false;
+            } else if (country.length < 2) {
+                setError('fieldCountry', 'errCountry', 'Please enter a valid country.');
+                valid = false;
+            } else if (!NAME_RE.test(country)) {
+                setError('fieldCountry', 'errCountry', 'Country should only contain letters.');
+                valid = false;
+            } else {
+                setError('fieldCountry', 'errCountry', null);
+            }
+
+            /* nationality — required, letters only */
+            if (!nationality) {
+                setError('fieldNationality', 'errNationality', 'Nationality is required.');
+                valid = false;
+            } else if (nationality.length < 2) {
+                setError('fieldNationality', 'errNationality', 'Please enter a valid nationality.');
+                valid = false;
+            } else if (!NAME_RE.test(nationality)) {
+                setError('fieldNationality', 'errNationality', 'Nationality should only contain letters.');
+                valid = false;
+            } else {
+                setError('fieldNationality', 'errNationality', null);
+            }
+
+            /* terms — required only */
+            setCheckboxError('chkTerms', 'errTerms', !terms);
+            if (!terms) valid = false;
+
+            if (!valid) { e.preventDefault(); return; }
 
             const btn = document.getElementById('submitBtn');
             if (btn) {
@@ -710,17 +685,15 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ✅ Show server-side errors
+    /* ── Show server-side errors ── */
     if (errorMessages) {
-        const globalError = document.getElementById('globalError');
+        const globalError    = document.getElementById('globalError');
         const globalErrorMsg = document.getElementById('globalErrorMsg');
-
         if (globalError && globalErrorMsg) {
             globalError.style.display = 'flex';
             globalErrorMsg.textContent = errorMessages;
         }
     }
-
 });
 </script>
 

@@ -156,13 +156,120 @@ def bulk_upload_save_task(rows, exhibitor_id):
         "total_valid": len(rows),
     }
 
-@shared_task
-def send_invite_email(email, token):
-    link = f"http://127.0.0.1:8000/register/{token}/"
+@shared_task(
+    bind=True,
+    rate_limit='100/m',  # max 100 emails per minute
+    max_retries=3
+)
+def send_invite_email(self,email, token):
+    try:
+        logger.info(f"Attempting to send invitation email to {email}")
+        link = f"http://127.0.0.1:8000/register/{token}/"
 
-    send_mail(
-        subject="You're Invited!",
-        message=f"Click to register: {link}",
-        from_email="abhinand@veuz.in",
-        recipient_list=[email],
+        send_mail(
+            subject="You're Invited!",
+            message=f"Click to register: {link}",
+            from_email="abhinand@veuz.in",
+            recipient_list=[email],
+        )
+        logger.info(f"Successfully sent invitation email to {email}")
+    except Exception as exc:
+        logger.error(f"Error sending invitation email to {email}: {exc}")
+        raise self.retry(exc=exc)
+
+
+@shared_task(bind=True)
+def process_invitations_batch(self, entries, exhibitor_id):
+    from .models import Attendee, Exhibitor
+    from django.db import transaction
+
+    exhibitor = Exhibitor.objects.get(id=exhibitor_id)
+    event = exhibitor.event
+
+    # 1️⃣ Collect emails
+    incoming_emails = {
+        (e.get("email") or "").strip().lower()
+        for e in entries if (e.get("email") or "").strip()
+    }
+
+    # 2️⃣ Fetch existing attendees
+    existing_qs = Attendee.objects.filter(
+        event=event,
+        email__in=incoming_emails
     )
+
+    existing_map = {a.email: a for a in existing_qs}
+
+    # 3️⃣ Prepare lists
+    to_create = []
+    to_email_existing = []
+
+    for entry in entries:
+        email = (entry.get("email") or "").strip().lower()
+        first_name = (entry.get("first_name") or "").strip()
+        last_name = (entry.get("last_name") or "").strip()
+        ticket_type= (entry.get("ticket_type") or "").strip()
+
+        if not email or not first_name or not last_name:
+            continue
+
+        if email in existing_map:
+            attendee = existing_map[email]
+
+            # OPTIONAL: reset status if you want re-invite behavior
+            if attendee.status != Attendee.Status.INVITED:
+                attendee.status = Attendee.Status.INVITED
+                attendee.save(update_fields=["status"])
+
+            to_email_existing.append(attendee)
+
+        else:
+            to_create.append(Attendee(
+                event=event,
+                exhibitor=exhibitor,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                status=Attendee.Status.INVITED
+            ))
+
+    # 4️⃣ Bulk insert new attendees
+    created = []
+    CHUNK = 500
+
+    logger.info(f"Attempting to bulk create {len(to_create)} attendees.")
+
+    for i in range(0, len(to_create), CHUNK):
+        created_batch = Attendee.objects.bulk_create(
+            to_create[i:i+CHUNK]
+        )
+        created += created_batch
+
+    logger.info(f"Successfully created {len(created)} attendees.")
+
+    # 5️⃣ Combine ALL for email (THIS WAS MISSING)
+    all_for_email = created + to_email_existing
+    
+    print(all_for_email,"----------all emaill")
+
+    logger.info(f"Total emails to send: {len(all_for_email)}")
+
+    # 6️⃣ Send emails
+    sent_count = 0
+
+    for i in range(0, len(all_for_email), 100):
+        batch = all_for_email[i:i+100]
+
+        for attendee in batch:
+            if attendee.pk:
+                send_invite_email.delay(
+                    attendee.email,
+                    str(attendee.invite_token)
+                )
+                sent_count += 1
+            else:
+                logger.warning(
+                    f"Attendee {attendee.email} has no PK, skipping email."
+                )
+
+    logger.info(f"Queued {sent_count} invitation emails.")

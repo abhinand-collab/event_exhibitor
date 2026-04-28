@@ -161,3 +161,4 @@ LOGGING = {
         "level": "INFO",
     },
 }
+CELERY_TASK_ALWAYS_EAGER = True

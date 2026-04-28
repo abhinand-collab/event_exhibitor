@@ -153,7 +153,7 @@
                             <th style="padding:11px 14px; text-align:left; color:#555; font-weight:600; border-bottom:2px solid #dde3f0; white-space:nowrap;">Email</th>
                             <th style="padding:11px 14px; text-align:left; color:#555; font-weight:600; border-bottom:2px solid #dde3f0; white-space:nowrap;">Ticket</th>
                             <th style="padding:11px 14px; text-align:left; color:#555; font-weight:600; border-bottom:2px solid #dde3f0; white-space:nowrap;">Status</th>
-                            <th style="padding:11px 14px; text-align:left; color:#555; font-weight:600; border-bottom:2px solid #dde3f0;">Issues</th>
+                            <th style="padding:11px 14px; text-align:left; color:#555; font-weight:600; border-bottom:2px solid #dde3f0;">Issues / Actions</th>
                         </tr>
                     </thead>
                     <tbody id="invitePreviewTableBody"></tbody>
@@ -225,6 +225,30 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════
+     SUCCESS MODAL
+═══════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:360px;">
+        <div class="modal-content" style="border-radius:12px; overflow:hidden; border:none; text-align:center;">
+            <div class="modal-body" style="padding:36px 28px 28px;">
+                <div style="width:60px; height:60px; background:#f0fdf4; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 18px;">
+                    <i class="fas fa-check" style="font-size:26px; color:#16a34a;"></i>
+                </div>
+                <h5 style="color:#1e293b; font-weight:600; font-size:18px; margin-bottom:8px;">Invitations Sent!</h5>
+                <p style="color:#64748b; font-size:14px; margin-bottom:24px;">
+                    <strong id="successModalCount" style="color:#1e293b;">0</strong> invitation(s) have been sent successfully.
+                </p>
+                <button type="button" id="successModalOkBtn"
+                        style="background:#16a34a; color:white; border:none; border-radius:8px; padding:10px 0; font-weight:600; font-size:14px; cursor:pointer; width:100%;">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
      SCRIPTS
 ═══════════════════════════════════════════════════════════ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -241,6 +265,7 @@ const OUR_FIELDS = [
 ];
 const VALID_TICKETS = ['VIP', 'EXHIBITOR', 'VISITOR'];
 const EMAIL_RE      = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NAME_RE       = /^[a-zA-Z \-'.]+$/;
 const PAGE_SIZE     = 10;
 
 /* ── STATE ─────────────────────────────────────────────────── */
@@ -265,6 +290,66 @@ function normaliseTicket(val) {
     if (v.includes('VISITOR'))   return 'VISITOR';
     return v;
 }
+function escHtml(str) {
+    return String(str || '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── SHARED VALIDATION ─────────────────────────────────────── */
+function validateRowData(first_name, last_name, email, ticket_type, ticket_raw, otherEmails) {
+    const issues = [];
+
+    // first_name
+    if (!first_name) {
+        issues.push('Missing first name');
+    } else if (first_name.length < 2) {
+        issues.push('First name must be at least 2 characters');
+    } else if (!NAME_RE.test(first_name)) {
+        issues.push('First name should only contain letters');
+    }
+
+    // last_name (optional, validated only if provided)
+    if (last_name) {
+        if (last_name.length < 2) {
+            issues.push('Last name must be at least 2 characters');
+        } else if (!NAME_RE.test(last_name)) {
+            issues.push('Last name should only contain letters');
+        }
+    }
+
+    // email
+    if (!email) {
+        issues.push('Missing email');
+    } else if (!EMAIL_RE.test(email)) {
+        issues.push('Invalid email format');
+    }
+
+    // ticket_type
+    if (!ticket_type) {
+        issues.push('Missing ticket type');
+    } else if (!VALID_TICKETS.includes(ticket_type)) {
+        issues.push('Unknown ticket: "' + (ticket_raw||ticket_type) + '" (use VIP / EXHIBITOR / VISITOR)');
+    }
+
+    // duplicate against other rows
+    let isDupe = false;
+    if (email && EMAIL_RE.test(email) && otherEmails && otherEmails.includes(email)) {
+        issues.push('Duplicate email in this file');
+        isDupe = true;
+    }
+
+    return { issues, isDupe, valid: issues.length === 0 };
+}
+
+/* ── SUCCESS MODAL ─────────────────────────────────────────── */
+function openSuccessModal(count) {
+    document.getElementById('successModalCount').textContent = count;
+    getModal('successModal').show();
+}
+document.getElementById('successModalOkBtn').addEventListener('click', () => {
+    location.reload();
+});
 
 /* ══════════════════════════════════════════════════════════════
    MANUAL ROWS
@@ -282,6 +367,7 @@ function createEntryRow() {
         <div style="flex:1; min-width:110px;">
             <input type="text" class="form-control inv-last-name" placeholder="Last Name"
                    style="border-radius:8px; border:1.5px solid #ddd; padding:10px 13px; width:100%;">
+            <div class="inv-err-last" style="color:#e74c3c; font-size:11px; margin-top:3px; display:none;"></div>
         </div>
         <div style="flex:1.4; min-width:150px;">
             <input type="email" class="form-control inv-email" placeholder="Email Address"
@@ -336,25 +422,60 @@ document.getElementById('sendInviteBtn').addEventListener('click', () => {
     let allOk = true;
 
     document.querySelectorAll('.invitation-entry-row').forEach(row => {
-        const fEl  = row.querySelector('.inv-first-name');
-        const lEl  = row.querySelector('.inv-last-name');
-        const eEl  = row.querySelector('.inv-email');
-        const tEl  = row.querySelector('.inv-ticket');
-        const ef   = row.querySelector('.inv-err-first');
-        const ee   = row.querySelector('.inv-err-email');
-        const et   = row.querySelector('.inv-err-ticket');
+        const fEl = row.querySelector('.inv-first-name');
+        const lEl = row.querySelector('.inv-last-name');
+        const eEl = row.querySelector('.inv-email');
+        const tEl = row.querySelector('.inv-ticket');
+        const ef  = row.querySelector('.inv-err-first');
+        const el  = row.querySelector('.inv-err-last');
+        const ee  = row.querySelector('.inv-err-email');
+        const et  = row.querySelector('.inv-err-ticket');
 
-        [fEl, eEl, tEl].forEach(el => el.style.borderColor = '#ddd');
-        [ef, ee, et].forEach(el => { el.textContent = ''; el.style.display = 'none'; });
+        [fEl, lEl, eEl, tEl].forEach(el => el.style.borderColor = '#ddd');
+        [ef, el, ee, et].forEach(el => { if(el){ el.textContent = ''; el.style.display = 'none'; } });
+
+        const first  = fEl.value.trim();
+        const last   = lEl.value.trim();
+        const email  = eEl.value.trim();
+        const ticket = tEl.value;
 
         let ok = true;
-        const first = fEl.value.trim(), email = eEl.value.trim(), ticket = tEl.value;
 
-        if (!first)                    { fEl.style.borderColor='#e74c3c'; ef.textContent='Required.'; ef.style.display='block'; ok=false; }
-        if (!EMAIL_RE.test(email))     { eEl.style.borderColor='#e74c3c'; ee.textContent=email?'Invalid email.':'Required.'; ee.style.display='block'; ok=false; }
-        if (!ticket)                   { tEl.style.borderColor='#e74c3c'; et.textContent='Required.'; et.style.display='block'; ok=false; }
+        // first_name
+        if (!first) {
+            fEl.style.borderColor='#e74c3c'; ef.textContent='Required.'; ef.style.display='block'; ok=false;
+        } else if (first.length < 2) {
+            fEl.style.borderColor='#e74c3c'; ef.textContent='At least 2 characters.'; ef.style.display='block'; ok=false;
+        } else if (!NAME_RE.test(first)) {
+            fEl.style.borderColor='#e74c3c'; ef.textContent='Letters only.'; ef.style.display='block'; ok=false;
+        }
 
-        if (ok) entries.push({ first_name:first, last_name:lEl.value.trim(), email, ticket_type:ticket });
+        // last_name (optional but validated if filled)
+        if (last) {
+            if (last.length < 2) {
+                lEl.style.borderColor='#e74c3c';
+                if(el){ el.textContent='At least 2 characters.'; el.style.display='block'; }
+                ok=false;
+            } else if (!NAME_RE.test(last)) {
+                lEl.style.borderColor='#e74c3c';
+                if(el){ el.textContent='Letters only.'; el.style.display='block'; }
+                ok=false;
+            }
+        }
+
+        // email
+        if (!email) {
+            eEl.style.borderColor='#e74c3c'; ee.textContent='Required.'; ee.style.display='block'; ok=false;
+        } else if (!EMAIL_RE.test(email)) {
+            eEl.style.borderColor='#e74c3c'; ee.textContent='Invalid email.'; ee.style.display='block'; ok=false;
+        }
+
+        // ticket
+        if (!ticket) {
+            tEl.style.borderColor='#e74c3c'; et.textContent='Required.'; et.style.display='block'; ok=false;
+        }
+
+        if (ok) entries.push({ first_name:first, last_name:last, email, ticket_type:ticket });
         else allOk = false;
     });
 
@@ -362,7 +483,7 @@ document.getElementById('sendInviteBtn').addEventListener('click', () => {
 
     const btn = document.getElementById('sendInviteBtn');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending…';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
 
     fetch('/send-invitations/', {
         method:'POST',
@@ -372,14 +493,10 @@ document.getElementById('sendInviteBtn').addEventListener('click', () => {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            showAlert('success', `<i class="fas fa-check-circle me-2"></i>${data.message || `${entries.length} invitation(s) sent.`}`);
-            setTimeout(() => {
-                const c = document.getElementById('invitationEntries');
-                c.innerHTML = '';
-                c.appendChild(createEntryRow());
-            }, 2000);
+            getModal('sendInvitationModal').hide();
+            setTimeout(() => openSuccessModal(entries.length), 420);
         } else {
-            showAlert('danger', `<i class="fas fa-times-circle me-2"></i>${data.error || 'Something went wrong.'}`);
+            showAlert('danger', '<i class="fas fa-times-circle me-2"></i>' + (data.error || 'Something went wrong.'));
         }
     })
     .catch(() => showAlert('danger','<i class="fas fa-wifi me-2"></i>Network error. Please try again.'))
@@ -396,7 +513,7 @@ document.getElementById('importFileBtn').addEventListener('click', () => {
 document.getElementById('importFileInput').addEventListener('change', function () {
     if (!this.files.length) return;
     const file = this.files[0];
-    this.value = '';   // reset so same file can be re-selected
+    this.value = '';
 
     const reader = new FileReader();
     reader.onload = e => {
@@ -425,13 +542,12 @@ document.getElementById('importFileInput').addEventListener('change', function (
 ══════════════════════════════════════════════════════════════ */
 function buildMappingModal(fileName, rowCount) {
     document.getElementById('mappingFileInfo').textContent =
-        `📄 ${fileName}  ·  ${rowCount} data rows  ·  ${fileHeaders.length} columns detected`;
+        '📄 ' + fileName + '  ·  ' + rowCount + ' data rows  ·  ' + fileHeaders.length + ' columns detected';
 
     const container = document.getElementById('mappingRows');
     container.innerHTML = '';
 
     OUR_FIELDS.forEach(field => {
-        // Auto-detect best matching column
         const autoMatch = fileHeaders.find(h => {
             const hn = h.toLowerCase().replace(/[\s_\-]/g,'');
             const fk = field.key.toLowerCase().replace(/[\s_\-]/g,'');
@@ -440,23 +556,21 @@ function buildMappingModal(fileName, rowCount) {
 
         const div = document.createElement('div');
         div.style.cssText = 'display:grid; grid-template-columns:1fr 44px 1fr; gap:12px; align-items:center; background:white; border:1px solid #e2e8f0; border-radius:10px; padding:14px 18px;';
-        div.innerHTML = `
-            <div>
-                <div style="font-weight:600; font-size:14px; color:#1e293b;">
-                    ${field.label}${field.required ? ' <span style="color:#e74c3c;">*</span>' : ''}
-                </div>
-                <div style="font-size:11px; color:#94a3b8; margin-top:3px;">
-                    ${field.required ? '⚠️ Required field' : '✓ Optional'}
-                </div>
-            </div>
-            <div style="text-align:center; font-size:18px; color:#94a3b8;">→</div>
-            <select data-field="${field.key}"
-                    style="border:1.5px solid ${autoMatch ? '#2ecc71' : '#e2e8f0'}; border-radius:8px; padding:9px 12px; font-size:13px; width:100%; outline:none; background:white; cursor:pointer;">
-                <option value="">— Skip this field —</option>
-                ${fileHeaders.map(h => `<option value="${h}" ${h === autoMatch ? 'selected' : ''}>${h}</option>`).join('')}
-            </select>`;
+        div.innerHTML =
+            '<div>' +
+                '<div style="font-weight:600; font-size:14px; color:#1e293b;">' +
+                    field.label + (field.required ? ' <span style="color:#e74c3c;">*</span>' : '') +
+                '</div>' +
+                '<div style="font-size:11px; color:#94a3b8; margin-top:3px;">' +
+                    (field.required ? 'Required field' : 'Optional') +
+                '</div>' +
+            '</div>' +
+            '<div style="text-align:center; font-size:18px; color:#94a3b8;">→</div>' +
+            '<select data-field="' + field.key + '" style="border:1.5px solid ' + (autoMatch ? '#2ecc71' : '#e2e8f0') + '; border-radius:8px; padding:9px 12px; font-size:13px; width:100%; outline:none; background:white; cursor:pointer;">' +
+                '<option value="">— Skip this field —</option>' +
+                fileHeaders.map(h => '<option value="' + escHtml(h) + '"' + (h === autoMatch ? ' selected' : '') + '>' + escHtml(h) + '</option>').join('') +
+            '</select>';
 
-        // Turn border green when a value is selected
         const sel = div.querySelector('select');
         sel.addEventListener('change', () => {
             sel.style.borderColor = sel.value ? '#2ecc71' : '#e2e8f0';
@@ -473,7 +587,7 @@ document.getElementById('applyMappingBtn').addEventListener('click', () => {
 
     const missing = OUR_FIELDS.filter(f => f.required && !mapping[f.key]).map(f => f.label);
     if (missing.length) {
-        alert(`Please map these required field(s): ${missing.join(', ')}`);
+        alert('Please map these required field(s): ' + missing.join(', '));
         return;
     }
 
@@ -481,8 +595,6 @@ document.getElementById('applyMappingBtn').addEventListener('click', () => {
 });
 
 function applyMappingAndBuildPreview(mapping) {
-
-    console.log(mapping,'------checkmapping')
     const seenEmails = {};
 
     parsedData = fileRows.map((row, idx) => {
@@ -493,11 +605,34 @@ function applyMappingAndBuildPreview(mapping) {
         const ticket_type = normaliseTicket(ticket_raw);
 
         const issues = [];
-        if (!first_name)                { issues.push('Missing first name'); }
-        if (!email)                     { issues.push('Missing email'); }
-        else if (!EMAIL_RE.test(email)) { issues.push('Invalid email format'); }
-        if (!ticket_type)               { issues.push('Missing ticket type'); }
-        else if (!VALID_TICKETS.includes(ticket_type)) { issues.push(`Unknown ticket: "${ticket_raw}" (use VIP / EXHIBITOR / VISITOR)`); }
+
+        if (!first_name) {
+            issues.push('Missing first name');
+        } else if (first_name.length < 2) {
+            issues.push('First name must be at least 2 characters');
+        } else if (!NAME_RE.test(first_name)) {
+            issues.push('First name should only contain letters');
+        }
+
+        if (last_name) {
+            if (last_name.length < 2) {
+                issues.push('Last name must be at least 2 characters');
+            } else if (!NAME_RE.test(last_name)) {
+                issues.push('Last name should only contain letters');
+            }
+        }
+
+        if (!email) {
+            issues.push('Missing email');
+        } else if (!EMAIL_RE.test(email)) {
+            issues.push('Invalid email format');
+        }
+
+        if (!ticket_type) {
+            issues.push('Missing ticket type');
+        } else if (!VALID_TICKETS.includes(ticket_type)) {
+            issues.push('Unknown ticket: "' + ticket_raw + '" (use VIP / EXHIBITOR / VISITOR)');
+        }
 
         let isDupe = false;
         if (email && EMAIL_RE.test(email)) {
@@ -520,7 +655,7 @@ function applyMappingAndBuildPreview(mapping) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   PREVIEW TABLE
+   SUMMARY BAR
 ══════════════════════════════════════════════════════════════ */
 function renderSummaryBar() {
     const valid   = parsedData.filter(r => r._valid).length;
@@ -531,9 +666,9 @@ function renderSummaryBar() {
     document.getElementById('inviteStatInvalid').textContent = invalid;
     document.getElementById('inviteStatDupe').textContent    = dupe;
     document.getElementById('inviteStatTotal').textContent   = parsedData.length;
-    document.getElementById('invitePreviewSubtitle').textContent = `${parsedData.length} rows from file`;
+    document.getElementById('invitePreviewSubtitle').textContent = parsedData.length + ' rows from file';
     document.getElementById('inviteSubmitHint').textContent  =
-        valid ? `✓ ${valid} valid row(s) ready to send` : '⚠ No valid rows to send';
+        valid ? ('✓ ' + valid + ' valid row(s) ready to send') : '⚠ No valid rows to send';
     document.getElementById('inviteSubmitHint').style.color = valid ? '#16a34a' : '#dc2626';
 }
 
@@ -543,9 +678,129 @@ function getFilteredData() {
     return parsedData;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   INLINE EDIT ROW
+══════════════════════════════════════════════════════════════ */
+const CELL_INPUT_STYLE = 'width:100%;padding:4px 7px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;color:#1e293b;background:white;box-sizing:border-box;';
+
+function buildEditRow(tr, r, dataIndex) {
+    const ticketOpts = VALID_TICKETS
+        .map(t => '<option value="' + t + '"' + (r.ticket_type === t ? ' selected' : '') + '>' + t + '</option>')
+        .join('');
+
+    tr.style.background = '#fffbeb';
+
+    tr.innerHTML =
+        '<td style="padding:8px 10px;color:#aaa;font-size:12px;vertical-align:top;">' + r._row + '</td>' +
+
+        '<td style="padding:6px 8px;vertical-align:top;">' +
+            '<input class="ep-first" value="' + escHtml(r.first_name) + '" placeholder="First Name" style="' + CELL_INPUT_STYLE + '">' +
+            '<div class="ep-err ep-err-first" style="color:#dc2626;font-size:11px;margin-top:2px;display:none;"></div>' +
+        '</td>' +
+
+        '<td style="padding:6px 8px;vertical-align:top;">' +
+            '<input class="ep-last" value="' + escHtml(r.last_name) + '" placeholder="Last Name" style="' + CELL_INPUT_STYLE + '">' +
+            '<div class="ep-err ep-err-last" style="color:#dc2626;font-size:11px;margin-top:2px;display:none;"></div>' +
+        '</td>' +
+
+        '<td style="padding:6px 8px;vertical-align:top;">' +
+            '<input class="ep-email" value="' + escHtml(r.email) + '" placeholder="Email" style="' + CELL_INPUT_STYLE + 'font-family:monospace;">' +
+            '<div class="ep-err ep-err-email" style="color:#dc2626;font-size:11px;margin-top:2px;display:none;"></div>' +
+        '</td>' +
+
+        '<td style="padding:6px 8px;vertical-align:top;">' +
+            '<select class="ep-ticket" style="' + CELL_INPUT_STYLE + 'padding:5px 7px;">' +
+                '<option value="">Select...</option>' +
+                ticketOpts +
+            '</select>' +
+            '<div class="ep-err ep-err-ticket" style="color:#dc2626;font-size:11px;margin-top:2px;display:none;"></div>' +
+        '</td>' +
+
+        '<td style="padding:6px 8px;vertical-align:middle;">' +
+            '<span style="background:#fef9c3;color:#854d0e;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">Editing</span>' +
+        '</td>' +
+
+        '<td style="padding:6px 10px;vertical-align:middle;white-space:nowrap;">' +
+            '<button class="ep-done-btn" style="background:#16a34a;color:white;border:none;border-radius:6px;padding:5px 13px;font-size:12px;font-weight:600;cursor:pointer;margin-right:5px;">' +
+                '<i class="fas fa-check me-1"></i>Done' +
+            '</button>' +
+            '<button class="ep-cancel-btn" style="background:white;color:#555;border:1px solid #ddd;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;">' +
+                'Cancel' +
+            '</button>' +
+        '</td>';
+
+    /* ── Done click ── */
+    tr.querySelector('.ep-done-btn').addEventListener('click', () => {
+        const first     = tr.querySelector('.ep-first').value.trim();
+        const last      = tr.querySelector('.ep-last').value.trim();
+        const email     = tr.querySelector('.ep-email').value.trim().toLowerCase();
+        const ticketRaw = tr.querySelector('.ep-ticket').value;
+        const ticket    = normaliseTicket(ticketRaw);
+
+        /* reset inline error state */
+        tr.querySelectorAll('.ep-err').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
+        tr.querySelectorAll('.ep-first,.ep-last,.ep-email,.ep-ticket').forEach(el => el.style.borderColor = '#ddd');
+
+        /* collect all OTHER rows' emails for dupe check */
+        const otherEmails = parsedData
+            .filter((_, i) => i !== dataIndex)
+            .map(d => d.email)
+            .filter(e => e && EMAIL_RE.test(e));
+
+        const { issues, isDupe, valid } = validateRowData(first, last, email, ticket, ticketRaw, otherEmails);
+
+        if (!valid) {
+            /* map issue messages to input + error div pairs */
+            const fieldMap = {
+                'Missing first name'                       : ['ep-first',  'ep-err-first'],
+                'First name must be at least 2 characters' : ['ep-first',  'ep-err-first'],
+                'First name should only contain letters'   : ['ep-first',  'ep-err-first'],
+                'Last name must be at least 2 characters'  : ['ep-last',   'ep-err-last'],
+                'Last name should only contain letters'    : ['ep-last',   'ep-err-last'],
+                'Missing email'                            : ['ep-email',  'ep-err-email'],
+                'Invalid email format'                     : ['ep-email',  'ep-err-email'],
+                'Duplicate email in this file'             : ['ep-email',  'ep-err-email'],
+                'Missing ticket type'                      : ['ep-ticket', 'ep-err-ticket'],
+            };
+
+            issues.forEach(msg => {
+                let pair = fieldMap[msg];
+                if (!pair && msg.indexOf('Unknown ticket') === 0) pair = ['ep-ticket','ep-err-ticket'];
+                if (!pair) return;
+                tr.querySelector('.' + pair[0]).style.borderColor = '#e74c3c';
+                const errEl = tr.querySelector('.' + pair[1]);
+                errEl.textContent = msg;
+                errEl.style.display = 'block';
+            });
+            return; /* stay in edit mode */
+        }
+
+        /* ✅ commit to parsedData */
+        parsedData[dataIndex] = Object.assign({}, parsedData[dataIndex], {
+            first_name : first,
+            last_name  : last,
+            email      : email,
+            ticket_type: ticket,
+            _issues    : [],
+            _valid     : true,
+            _isDupe    : false,
+        });
+
+        renderSummaryBar();
+        renderPreviewTable();
+    });
+
+    /* ── Cancel click ── */
+    tr.querySelector('.ep-cancel-btn').addEventListener('click', () => {
+        renderPreviewTable();
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PREVIEW TABLE
+══════════════════════════════════════════════════════════════ */
 function renderPreviewTable() {
     const data     = getFilteredData();
-    
     const total    = data.length;
     const pages    = Math.max(1, Math.ceil(total / PAGE_SIZE));
     if (currentPage > pages) currentPage = 1;
@@ -561,43 +816,56 @@ function renderPreviewTable() {
         empty.style.display = 'block';
     } else {
         empty.style.display = 'none';
+
         pageData.forEach(r => {
+            const dataIndex = parsedData.indexOf(r);
             const bg = r._valid ? '#ffffff' : '#fff8f8';
+
             const statusPill = r._valid
-                ? `<span style="background:#dcfce7;color:#15803d;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700;">✓ Valid</span>`
-                : `<span style="background:#fee2e2;color:#dc2626;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700;">✗ Error</span>`;
+                ? '<span style="background:#dcfce7;color:#15803d;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700;">✓ Valid</span>'
+                : '<span style="background:#fee2e2;color:#dc2626;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700;">✗ Error</span>';
 
             const ticketMap = { VIP:'VIP Pass', EXHIBITOR:'Exhibitor Pass', VISITOR:'Visitor Pass' };
             const ticketDisplay = ticketMap[r.ticket_type] || (r.ticket_type || '<em style="color:#aaa">—</em>');
 
-            const issuesDisplay = r._issues.length
-                ? `<span style="color:#dc2626;font-size:12px;" title="${r._issues.join(' | ')}">
-                       <i class="fas fa-exclamation-triangle" style="margin-right:4px;"></i>${r._issues.join('; ')}
-                   </span>`
-                : `<span style="color:#16a34a;font-size:12px;"><i class="fas fa-check" style="margin-right:4px;"></i>—</span>`;
+            const issueText = r._issues.length
+                ? '<span style="color:#dc2626;font-size:12px;"><i class="fas fa-exclamation-triangle" style="margin-right:4px;"></i>' + escHtml(r._issues.join('; ')) + '</span>'
+                : '<span style="color:#16a34a;font-size:12px;"><i class="fas fa-check" style="margin-right:4px;"></i>—</span>';
 
-            tbody.innerHTML += `
-                <tr style="background:${bg}; border-bottom:1px solid #f0f0f0; transition:background .15s;">
-                    <td style="padding:10px 14px; color:#aaa; font-size:12px;">${r._row}</td>
-                    <td style="padding:10px 14px; font-weight:500; color:#1e293b;">${r.first_name || '<em style="color:#ddd">—</em>'}</td>
-                    <td style="padding:10px 14px; color:#475569;">${r.last_name || '<em style="color:#ddd">—</em>'}</td>
-                    <td style="padding:10px 14px; color:#475569; font-family:monospace; font-size:12px;">${r.email || '<em style="color:#ddd">—</em>'}</td>
-                    <td style="padding:10px 14px; color:#475569;">${ticketDisplay}</td>
-                    <td style="padding:10px 14px;">${statusPill}</td>
-                    <td style="padding:10px 14px; max-width:260px; word-break:break-word;">${issuesDisplay}</td>
-                </tr>`;
+            const tr = document.createElement('tr');
+            tr.style.cssText = 'background:' + bg + '; border-bottom:1px solid #f0f0f0;';
+            tr.innerHTML =
+                '<td style="padding:10px 14px;color:#aaa;font-size:12px;">' + r._row + '</td>' +
+                '<td style="padding:10px 14px;font-weight:500;color:#1e293b;">' + (escHtml(r.first_name) || '<em style="color:#ddd">—</em>') + '</td>' +
+                '<td style="padding:10px 14px;color:#475569;">' + (escHtml(r.last_name) || '<em style="color:#ddd">—</em>') + '</td>' +
+                '<td style="padding:10px 14px;color:#475569;font-family:monospace;font-size:12px;">' + (escHtml(r.email) || '<em style="color:#ddd">—</em>') + '</td>' +
+                '<td style="padding:10px 14px;color:#475569;">' + ticketDisplay + '</td>' +
+                '<td style="padding:10px 14px;">' + statusPill + '</td>' +
+                '<td style="padding:10px 12px;max-width:280px;word-break:break-word;">' +
+                    '<div style="display:flex;align-items:flex-start;gap:8px;">' +
+                        '<span style="flex:1;font-size:12px;">' + issueText + '</span>' +
+                        '<button class="row-edit-btn" style="flex-shrink:0;background:white;color:#1a56db;border:1px solid #1a56db;border-radius:6px;padding:3px 11px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">' +
+                            '<i class="fas fa-pencil-alt me-1"></i>Edit' +
+                        '</button>' +
+                    '</div>' +
+                '</td>';
+
+            tr.querySelector('.row-edit-btn').addEventListener('click', () => {
+                buildEditRow(tr, r, dataIndex);
+            });
+
+            tbody.appendChild(tr);
         });
     }
 
-    // Pagination info
+    /* Pagination info */
     document.getElementById('invitePaginationInfo').textContent =
-        total ? `Showing ${start+1}–${Math.min(start+PAGE_SIZE, total)} of ${total} rows` : '';
+        total ? ('Showing ' + (start+1) + '–' + Math.min(start+PAGE_SIZE, total) + ' of ' + total + ' rows') : '';
 
-    // Pagination buttons
+    /* Pagination buttons */
     const btnWrap = document.getElementById('invitePaginationBtns');
     btnWrap.innerHTML = '';
     if (pages > 1) {
-        // Prev
         const prev = document.createElement('button');
         prev.innerHTML = '‹';
         prev.disabled  = currentPage === 1;
@@ -605,7 +873,6 @@ function renderPreviewTable() {
         prev.addEventListener('click', () => { currentPage--; renderPreviewTable(); });
         btnWrap.appendChild(prev);
 
-        // Page numbers (show max 7)
         let pageNums = [];
         if (pages <= 7) {
             pageNums = Array.from({length:pages}, (_,i)=>i+1);
@@ -628,7 +895,6 @@ function renderPreviewTable() {
             btnWrap.appendChild(b);
         });
 
-        // Next
         const next = document.createElement('button');
         next.innerHTML = '›';
         next.disabled  = currentPage === pages;
@@ -637,13 +903,13 @@ function renderPreviewTable() {
         btnWrap.appendChild(next);
     }
 
-    // Sync filter button active states
+    /* Sync filter pill active states */
     document.querySelectorAll('.preview-filter-btn').forEach(btn => {
         const active = btn.dataset.filter === currentFilter;
         if (active) {
-            btn.style.background = '#1a56db';
-            btn.style.color      = 'white';
-            btn.style.borderColor= '#1a56db';
+            btn.style.background  = '#1a56db';
+            btn.style.color       = 'white';
+            btn.style.borderColor = '#1a56db';
         } else {
             btn.style.background = 'white';
             const colorMap = { valid:'#2ecc71', invalid:'#e74c3c', all:'#ddd' };
@@ -654,7 +920,7 @@ function renderPreviewTable() {
 }
 
 function stylePageBtn(btn, active) {
-    btn.style.cssText = `border:1px solid ${active?'#1a56db':'#ddd'}; background:${active?'#1a56db':'white'}; color:${active?'white':'#555'}; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; min-width:30px;`;
+    btn.style.cssText = 'border:1px solid ' + (active?'#1a56db':'#ddd') + '; background:' + (active?'#1a56db':'white') + '; color:' + (active?'white':'#555') + '; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; min-width:30px;';
 }
 
 /* Filter pills */
@@ -690,7 +956,7 @@ document.getElementById('bulkSendBtn').addEventListener('click', () => {
 
     const btn = document.getElementById('bulkSendBtn');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending…';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
 
     fetch('/send-invitations/', {
         method : 'POST',
@@ -700,7 +966,7 @@ document.getElementById('bulkSendBtn').addEventListener('click', () => {
     .then(r => r.json())
     .then(data => {
         getModal('bulkPreviewModal2').hide();
-        setTimeout(() => openResultsModal(data, validEntries.length), 420);
+        setTimeout(() => openSuccessModal(validEntries.length), 420);
     })
     .catch(() => alert('Network error. Please try again.'))
     .finally(() => {
@@ -710,11 +976,11 @@ document.getElementById('bulkSendBtn').addEventListener('click', () => {
 });
 
 /* ══════════════════════════════════════════════════════════════
-   RESULTS MODAL
+   RESULTS MODAL (kept for reference)
 ══════════════════════════════════════════════════════════════ */
 function openResultsModal(data, attempted) {
-    const sent        = data.sent_count    ?? attempted;
-    const serverSkip  = data.skipped_count ?? (attempted - sent);
+    const sent        = data.sent_count    != null ? data.sent_count    : attempted;
+    const serverSkip  = data.skipped_count != null ? data.skipped_count : (attempted - sent);
     const clientSkip  = parsedData.filter(r => !r._valid).length;
     const totalSkip   = clientSkip + serverSkip;
     const serverErrors = Array.isArray(data.errors) ? data.errors : [];
@@ -722,23 +988,18 @@ function openResultsModal(data, attempted) {
     document.getElementById('resSent').textContent    = sent;
     document.getElementById('resSkipped').textContent = totalSkip;
 
-    let html = `
-        <div><i class="fas fa-check-circle me-2" style="color:#16a34a;"></i>
-             <strong>${sent}</strong> invitation(s) sent successfully</div>
-        <div><i class="fas fa-filter me-2" style="color:#94a3b8;"></i>
-             <strong>${clientSkip}</strong> row(s) skipped — failed local validation</div>`;
+    let html =
+        '<div><i class="fas fa-check-circle me-2" style="color:#16a34a;"></i><strong>' + sent + '</strong> invitation(s) sent successfully</div>' +
+        '<div><i class="fas fa-filter me-2" style="color:#94a3b8;"></i><strong>' + clientSkip + '</strong> row(s) skipped — failed local validation</div>';
 
     if (serverSkip > 0) {
-        html += `<div><i class="fas fa-server me-2" style="color:#f59e0b;"></i>
-                     <strong>${serverSkip}</strong> row(s) rejected by server (e.g. already registered)</div>`;
+        html += '<div><i class="fas fa-server me-2" style="color:#f59e0b;"></i><strong>' + serverSkip + '</strong> row(s) rejected by server</div>';
     }
-
     if (serverErrors.length) {
-        html += `<div style="margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0; font-size:12px; color:#888;">
-                     <strong style="color:#555; font-size:12px;">Server messages:</strong><br>
-                     ${serverErrors.slice(0,8).map(e=>`<div style="margin-top:3px;">• ${e}</div>`).join('')}
-                     ${serverErrors.length > 8 ? `<div style="color:#aaa; margin-top:4px;">…and ${serverErrors.length-8} more</div>` : ''}
-                 </div>`;
+        html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:12px;color:#888;"><strong style="color:#555;">Server messages:</strong><br>' +
+            serverErrors.slice(0,8).map(e => '<div style="margin-top:3px;">• ' + escHtml(e) + '</div>').join('') +
+            (serverErrors.length > 8 ? '<div style="color:#aaa;margin-top:4px;">…and ' + (serverErrors.length-8) + ' more</div>' : '') +
+            '</div>';
     }
 
     document.getElementById('resBreakdown').innerHTML = html;
@@ -755,7 +1016,7 @@ function showAlert(type, html) {
         danger  : { bg:'#fdf2f2', border:'#e74c3c', color:'#c0392b' },
         info    : { bg:'#eef5ff', border:'#3498db', color:'#1a5276' },
     }[type] || {};
-    el.style.cssText = `display:flex; align-items:flex-start; gap:8px; background:${s.bg}; border:1px solid ${s.border}; color:${s.color}; border-radius:8px; padding:12px 16px; margin-bottom:18px; font-size:13px;`;
+    el.style.cssText = 'display:flex; align-items:flex-start; gap:8px; background:' + s.bg + '; border:1px solid ' + s.border + '; color:' + s.color + '; border-radius:8px; padding:12px 16px; margin-bottom:18px; font-size:13px;';
     el.innerHTML = html;
 }
 function hideAlert() {
@@ -763,6 +1024,9 @@ function hideAlert() {
     el.style.display = 'none';
     el.innerHTML = '';
 }
+
+/* expose validateRowData for potential external use */
+window._validateInviteRow = validateRowData;
 
 })();
 </script>

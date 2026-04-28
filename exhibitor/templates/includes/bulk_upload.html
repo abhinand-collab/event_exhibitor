@@ -716,8 +716,14 @@ function renderPreviewTable(rows) {
 
   rows.forEach(r => {
     const isInvalid = r.status === "invalid";
-    const err = msg => r.errors.includes(msg) ? `<div class="bpt-error">${msg}</div>` : "";
-    const cls = msg => r.errors.includes(msg) ? "bpt-input-err" : "";
+
+    // ✅ FIX: accept multiple error messages
+    const err = (...msgs) => msgs
+      .filter(m => r.errors.includes(m))
+      .map(m => `<div class="bpt-error">${m}</div>`)
+      .join("");
+
+    const cls = (...msgs) => msgs.some(m => r.errors.includes(m)) ? "bpt-input-err" : "";
 
     const tr = document.createElement("tr");
     tr.className        = `bpt-row ${isInvalid ? "bpt-row-invalid" : ""}`;
@@ -726,40 +732,71 @@ function renderPreviewTable(rows) {
 
     tr.innerHTML = `
       <td class="bpt-td" style="color:#888;font-weight:600;">${r.row}</td>
+
       <td class="bpt-td">
-        <input class="bpt-input ${cls('First name required')}" value="${escapeHtml(r.first_name)}">
-        ${err('First name required')}
+        <input class="bpt-input ${cls(
+          'First name required',
+          'First name must be at least 2 characters',
+          'First name should only contain letters'
+        )}" value="${escapeHtml(r.first_name)}">
+        ${err(
+          'First name required',
+          'First name must be at least 2 characters',
+          'First name should only contain letters'
+        )}
       </td>
-      <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.last_name)}"></td>
+
       <td class="bpt-td">
-        <input class="bpt-input ${cls('Invalid email')} ${cls('Email already exists')}" value="${escapeHtml(r.email)}">
-        ${err('Invalid email')}${err('Email already exists')}
+        <input class="bpt-input ${cls(
+          'Last name must be at least 2 characters',
+          'Last name should only contain letters'
+        )}" value="${escapeHtml(r.last_name)}">
+        ${err(
+          'Last name must be at least 2 characters',
+          'Last name should only contain letters'
+        )}
       </td>
+
+      <td class="bpt-td">
+        <input class="bpt-input ${cls('Invalid email', 'Email already exists')}"
+               value="${escapeHtml(r.email)}">
+        ${err('Invalid email', 'Email already exists')}
+      </td>
+
       <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.mobile_number)}"></td>
+
       <td class="bpt-td">
         <input class="bpt-input ${cls('Country required')}" value="${escapeHtml(r.country)}">
         ${err('Country required')}
       </td>
+
       <td class="bpt-td">
         <input class="bpt-input ${cls('Nationality required')}" value="${escapeHtml(r.nationality)}">
         ${err('Nationality required')}
       </td>
+
       <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.company_name)}"></td>
       <td class="bpt-td"><input class="bpt-input" value="${escapeHtml(r.job_title)}"></td>
+
       <td class="bpt-td">
-        <select class="bpt-input bpt-ticket-type ${cls('Ticket type required')}">
+        <select class="bpt-input bpt-ticket-type ${cls('Ticket type required', 'Invalid ticket type')}">
           <option value="">Select</option>
           <option value="VIP"       ${r.ticket_type === "VIP"       ? "selected" : ""}>VIP</option>
           <option value="VISITOR"   ${r.ticket_type === "VISITOR"   ? "selected" : ""}>Visitor</option>
           <option value="EXHIBITOR" ${r.ticket_type === "EXHIBITOR" ? "selected" : ""}>Exhibitor</option>
         </select>
-        ${err('Ticket type required')}
+        ${err('Ticket type required', 'Invalid ticket type')}
       </td>
-      <td class="bpt-td text-center"><input type="checkbox" ${r.accepted_terms         ? "checked" : ""}></td>
+
+      <td class="bpt-td text-center">
+        <input type="checkbox" ${r.accepted_terms ? "checked" : ""}>
+        ${err('Terms must be accepted')}
+      </td>
       <td class="bpt-td text-center"><input type="checkbox" ${r.accepted_data_sharing  ? "checked" : ""}></td>
       <td class="bpt-td text-center"><input type="checkbox" ${r.accepted_marketing     ? "checked" : ""}></td>
       <td class="bpt-td text-center"><input type="checkbox" ${r.digital_badge_issued   ? "checked" : ""}></td>
       <td class="bpt-td text-center"><input type="checkbox" ${r.onsite_badge_printed   ? "checked" : ""}></td>
+
       <td class="bpt-td">
         <span class="bpt-status ${isInvalid ? 'bpt-s-invalid' : 'bpt-s-valid'}">${r.status}</span>
         <button class="btn btn-sm btn-outline-primary check-row-btn ms-1">✔ Check</button>
@@ -1048,8 +1085,7 @@ document.getElementById("submitBulkBtn").addEventListener("click", async () => {
     );
 
     bootstrap.Modal.getInstance(document.getElementById("bulkPreviewModal")).hide();
-    submitBtn.innerHTML = origText;
-    submitBtn.disabled  = false;
+    location.reload();
 
   } catch (error) {
     console.error(error);
