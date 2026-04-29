@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 @shared_task
 def bulk_upload_save_task(rows, exhibitor_id):
     import re
+    import threading
     from django.core.validators import validate_email
     from django.core.exceptions import ValidationError
     from .models import Exhibitor
@@ -26,17 +27,12 @@ def bulk_upload_save_task(rows, exhibitor_id):
     NAME_RE            = re.compile(r"^[A-Za-z \-'.]+$")
     BATCH_SIZE         = 200
 
-    # Pull existing DB emails once — cheaper than per-row DB hit
     existing_emails = set(
         Attendee.objects.filter(exhibitor=exhibitor)
         .values_list("email", flat=True)
     )
 
     def is_valid_row(row, email):
-        """
-        Returns (is_valid, reason_string).
-        Mirrors CreateBadgeForm + JS validateRowData rules exactly.
-        """
         first_name  = str(row.get("first_name") or "").strip()
         last_name   = str(row.get("last_name")  or "").strip()
         country     = str(row.get("country")     or "").strip()
@@ -44,7 +40,6 @@ def bulk_upload_save_task(rows, exhibitor_id):
         ticket_type = str(row.get("ticket_type") or "").strip().upper()
         accepted_terms = row.get("accepted_terms", False)
 
-        # first_name
         if not first_name:
             return False, "First name is required"
         if len(first_name) < 2:
@@ -52,14 +47,12 @@ def bulk_upload_save_task(rows, exhibitor_id):
         if not NAME_RE.match(first_name):
             return False, "First name contains invalid characters"
 
-        # last_name (optional — only validated when present)
         if last_name:
             if len(last_name) < 2:
                 return False, "Last name must be at least 2 characters"
             if not NAME_RE.match(last_name):
                 return False, "Last name contains invalid characters"
 
-        # email
         if not email or "@" not in email:
             return False, "Invalid email address"
         try:
@@ -71,46 +64,47 @@ def bulk_upload_save_task(rows, exhibitor_id):
         if email in seen_emails:
             return False, "Duplicate email within this upload"
 
-        # country & nationality
         if not country:
             return False, "Country is required"
         if not nationality:
             return False, "Nationality is required"
 
-        # ticket_type
         if not ticket_type:
             return False, "Ticket type is required"
         if ticket_type not in VALID_TICKET_TYPES:
             return False, f"Invalid ticket type: {ticket_type}"
 
-        # terms
         if not accepted_terms:
             return False, "Terms & Conditions must be accepted"
 
         return True, None
 
+    # ── Collect attendees to email AFTER all DB writes succeed ──────────────
+    # We batch them and send after the transaction so a mail failure
+    # never rolls back a committed badge.
+    emails_to_send = []   # list of (attendee, ticket_type) tuples
+
     for i in range(0, len(rows), BATCH_SIZE):
         batch = rows[i:i + BATCH_SIZE]
 
         with transaction.atomic():
+            batch_emails = []   # track within this atomic block only
+
             for row in batch:
                 raw_email = row.get("email") or ""
                 email     = raw_email.strip().lower()
 
-                # Pass limit guard
                 if already_used + created >= exhibitor.pass_limit:
                     skipped += 1
                     logger.warning(f"Pass limit reached at {exhibitor.pass_limit}. Skipping {email}.")
                     continue
 
-                # Validate row
                 valid, reason = is_valid_row(row, email)
                 if not valid:
                     skipped += 1
                     logger.warning(f"Row skipped — {reason} | email={email} | row={row}")
                     continue
 
-                # Safe to add to seen_emails only after passing validation
                 seen_emails.add(email)
 
                 try:
@@ -128,11 +122,11 @@ def bulk_upload_save_task(rows, exhibitor_id):
                         attendee_type        = str(row.get("ticket_type") or "").strip().upper(),
                         source               = "Bulk Upload",
                         status               = "CONFIRMED",
-                        accepted_terms       = bool(row.get("accepted_terms",       False)),
-                        accepted_data_sharing= bool(row.get("accepted_data_sharing",False)),
-                        accepted_marketing   = bool(row.get("accepted_marketing",   False)),
-                        digital_badge_issued = bool(row.get("digital_badge_issued", False)),
-                        onsite_badge_printed = bool(row.get("onsite_badge_printed", False)),
+                        accepted_terms       = bool(row.get("accepted_terms",        False)),
+                        accepted_data_sharing= bool(row.get("accepted_data_sharing", False)),
+                        accepted_marketing   = bool(row.get("accepted_marketing",    False)),
+                        digital_badge_issued = bool(row.get("digital_badge_issued",  False)),
+                        onsite_badge_printed = bool(row.get("onsite_badge_printed",  False)),
                     )
 
                     Badge.objects.create(
@@ -141,6 +135,8 @@ def bulk_upload_save_task(rows, exhibitor_id):
                     )
 
                     created += 1
+                    # Stage for emailing — only after both DB writes succeed
+                    batch_emails.append((attendee, str(row.get("ticket_type") or "").strip().upper()))
 
                 except IntegrityError as e:
                     logger.warning(f"IntegrityError for email {email}: {e}", exc_info=True)
@@ -150,11 +146,79 @@ def bulk_upload_save_task(rows, exhibitor_id):
                     logger.error(f"Unexpected error for row {row}: {e}", exc_info=True)
                     skipped += 1
 
+        # ── Transaction committed — now safe to queue emails for this batch ──
+        emails_to_send.extend(batch_emails)
+
+    # ── Send all confirmation emails in a single background thread ──────────
+    # One thread per task keeps overhead low; individual send errors are
+    # caught and logged without affecting any other attendee's email.
+    def send_all_emails(pairs):
+        for attendee, ticket_type in pairs:
+            try:
+                send_badge_confirmation_email(attendee, ticket_type)
+
+            except Exception as exc:
+                logger.error(
+                    "Bulk confirmation email failed for %s: %s",
+                    attendee.email, exc
+                )
+
+    if emails_to_send:
+        threading.Thread(
+            target=send_all_emails,
+            args=(emails_to_send,),
+            daemon=True,
+        ).start()
+
     return {
         "created"    : created,
         "skipped"    : skipped,
         "total_valid": len(rows),
     }
+
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
+
+def send_badge_confirmation_email(attendee, ticket_type: str) -> None:
+    """
+    Send a styled confirmation email to the attendee after badge creation.
+    Silently swallows send errors so they never break the main request.
+    """
+    context = {
+        "first_name"  : attendee.first_name,
+        "last_name"   : attendee.last_name,
+        "email"       : attendee.email,
+        "company_name": attendee.company_name,
+        "job_title"   : attendee.job_title,
+        "country"     : attendee.country_of_residence,
+        "ticket_type" : ticket_type,
+        "event_name"  : attendee.event.name,  # adjust if your field name differs
+    }
+
+    html_body  = render_to_string("emails/badge_confirmation.html", context)
+    plain_body = strip_tags(html_body)
+    subject    = f"Badge Confirmed – {attendee.event.name}"
+
+    msg = EmailMultiAlternatives(
+        subject      = subject,
+        body         = plain_body,
+        from_email   = None,          # uses DEFAULT_FROM_EMAIL from settings
+        to           = [attendee.email],
+    )
+    msg.attach_alternative(html_body, "text/html")
+
+    try:
+        msg.send()
+        logger.info(f"Successfully sent invitation email to {attendee.email}")
+
+    except Exception as exc:
+        # Log the failure but never let an email error break badge creation
+        import logging
+        logging.getLogger(__name__).error(
+            "Badge confirmation email failed for %s: %s", attendee.email, exc
+        )
 
 @shared_task(
     bind=True,

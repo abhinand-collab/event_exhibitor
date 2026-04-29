@@ -185,3 +185,454 @@ D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\views.py change
 Watching for file changes with StatReloader
 Bad Request: /badge/create/
 Bad Request: /badge/create/
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Internal Server Error: /badge/create/
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Bad Request: /badge/create/
+Not Found: /favicon.ico
+Bad Request: /badge/create/
+Internal Server Error: /badge/create/
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Bad Request: /badge/create/
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Bad Request: /badge/create/
+Watching for file changes with StatReloader
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Bad Request: /badge/create/
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Bad Request: /badge/create/
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Bad Request: /badge/create/
+Not Found: /favicon.ico
+Bad Request: /badge/create/
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Bad Request: /badge/create/
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Task exhibitor.tasks.bulk_upload_save_task[46bf94b5-642f-48cd-84b3-41484838c2ea] succeeded in 0.063003099989146s: {'created': 2, 'skipped': 0, 'total_valid': 2}
+Internal Server Error: /bulk-task-status/46bf94b5-642f-48cd-84b3-41484838c2ea/
+Traceback (most recent call last):
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 1003, in connect_check_health
+    sock = self._connect()
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 1515, in _connect
+    raise err
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 1499, in _connect
+    sock.connect(socket_address)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\views.py", line 521, in bulk_task_status
+    if result.state == "PENDING":
+       ^^^^^^^^^^^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\celery\result.py", line 505, in state
+    return self._get_task_meta()['status']
+           ~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\celery\result.py", line 444, in _get_task_meta
+    return self._maybe_set_cache(self.backend.get_task_meta(self.id))
+                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\celery\backends\base.py", line 717, in get_task_meta
+    meta = self._get_task_meta_for(task_id)
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\celery\backends\base.py", line 1112, in _get_task_meta_for
+    meta = self.get(self.get_key_for_task(task_id))
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\celery\backends\redis.py", line 405, in get
+    return self.client.get(key)
+           ~~~~~~~~~~~~~~~^^^^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\commands\core.py", line 2073, in get
+    return self.execute_command("GET", name, keys=[name])
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\client.py", line 716, in execute_command
+    return self._execute_command(*args, **options)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\client.py", line 722, in _execute_command
+    conn = self.connection or pool.get_connection()
+                              ~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\utils.py", line 236, in wrapper
+    return func(*args, **kwargs)
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 3041, in get_connection
+    connection.connect()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 976, in connect
+    self.retry.call_with_retry(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        lambda: self.connect_check_health(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        lambda error: self.disconnect(error),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\retry.py", line 132, in call_with_retry
+    raise error
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\retry.py", line 120, in call_with_retry
+    return do()
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 977, in <lambda>
+    lambda: self.connect_check_health(
+            ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        check_health=True, retry_socket_connect=False
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ),
+    ^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 1025, in connect_check_health
+    raise e
+redis.exceptions.ConnectionError: Error 10061 connecting to 127.0.0.1:6379. No connection could be made because the target machine actively refused it.
+Internal Server Error: /bulk-task-status/46bf94b5-642f-48cd-84b3-41484838c2ea/
+Traceback (most recent call last):
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 1003, in connect_check_health
+    sock = self._connect()
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 1515, in _connect
+    raise err
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 1499, in _connect
+    sock.connect(socket_address)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\views.py", line 521, in bulk_task_status
+    if result.state == "PENDING":
+       ^^^^^^^^^^^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\celery\result.py", line 505, in state
+    return self._get_task_meta()['status']
+           ~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\celery\result.py", line 444, in _get_task_meta
+    return self._maybe_set_cache(self.backend.get_task_meta(self.id))
+                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\celery\backends\base.py", line 717, in get_task_meta
+    meta = self._get_task_meta_for(task_id)
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\celery\backends\base.py", line 1112, in _get_task_meta_for
+    meta = self.get(self.get_key_for_task(task_id))
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\celery\backends\redis.py", line 405, in get
+    return self.client.get(key)
+           ~~~~~~~~~~~~~~~^^^^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\commands\core.py", line 2073, in get
+    return self.execute_command("GET", name, keys=[name])
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\client.py", line 716, in execute_command
+    return self._execute_command(*args, **options)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\client.py", line 722, in _execute_command
+    conn = self.connection or pool.get_connection()
+                              ~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\utils.py", line 236, in wrapper
+    return func(*args, **kwargs)
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 3041, in get_connection
+    connection.connect()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 976, in connect
+    self.retry.call_with_retry(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        lambda: self.connect_check_health(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        lambda error: self.disconnect(error),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\retry.py", line 132, in call_with_retry
+    raise error
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\retry.py", line 120, in call_with_retry
+    return do()
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 977, in <lambda>
+    lambda: self.connect_check_health(
+            ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        check_health=True, retry_socket_connect=False
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ),
+    ^
+  File "D:\Django New Projects\event_exhibitor\venv\Lib\site-packages\redis\connection.py", line 1025, in connect_check_health
+    raise e
+redis.exceptions.ConnectionError: Error 10061 connecting to 127.0.0.1:6379. No connection could be made because the target machine actively refused it.
+Row skipped — Email already exists in database | email=avsa.white0@example.com | row={'first_name': 'Ava', 'last_name': 'White', 'email': 'avsa.white0@example.com', 'mobile_number': '8459976947', 'country': 'Germany', 'nationality': 'Afghan', 'company_name': 'NextGen', 'job_title': 'Engineer', 'ticket_type': 'VIP', 'accepted_terms': True, 'accepted_data_sharing': False, 'accepted_marketing': False, 'digital_badge_issued': False, 'onsite_badge_printed': False}
+Row skipped — Email already exists in database | email=nofah.johnson1@example.com | row={'first_name': 'Noah', 'last_name': 'Johnson', 'email': 'nofah.johnson1@example.com', 'mobile_number': '7134370619', 'country': 'Albania', 'nationality': 'Algerian', 'company_name': 'NextGen', 'job_title': 'Engineer', 'ticket_type': 'VISITOR', 'accepted_terms': True, 'accepted_data_sharing': False, 'accepted_marketing': False, 'digital_badge_issued': False, 'onsite_badge_printed': False}
+Task exhibitor.tasks.bulk_upload_save_task[2e59afff-1c9a-4026-a0f8-23f86cbf5dc6] succeeded in 0.014225500053726137s: {'created': 0, 'skipped': 2, 'total_valid': 2}
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Task exhibitor.tasks.bulk_upload_save_task[71149c71-a6ec-4f0b-89ee-119ebcad88f3] succeeded in 0.045945199904963374s: {'created': 1, 'skipped': 0, 'total_valid': 1}
+Watching for file changes with StatReloader
+Not Found: /favicon.ico
+Task exhibitor.tasks.bulk_upload_save_task[d6ba6cec-7ef0-4a82-aec5-aac15559d2c8] succeeded in 2.6647751999553293s: {'created': 1000, 'skipped': 0, 'total_valid': 1000}
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Task exhibitor.tasks.bulk_upload_save_task[b18fbe1c-a7d2-4b84-8440-cc44c10a82ad] succeeded in 2.0482349999947473s: {'created': 1000, 'skipped': 0, 'total_valid': 1000}
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Task exhibitor.tasks.bulk_upload_save_task[e6bc110e-9baa-4b31-b9f9-e0417504e0b2] succeeded in 1.9721134999999776s: {'created': 1000, 'skipped': 0, 'total_valid': 1000}
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\views.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\views.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Task exhibitor.tasks.bulk_upload_save_task[1ce3f5f6-cdb9-42a2-aa58-bded539622aa] succeeded in 1.6802611000603065s: {'created': 1000, 'skipped': 0, 'total_valid': 1000}
+D:\Django New Projects\event_exhibitor\event_exhibitor\event_exhibitor\settings.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Watching for file changes with StatReloader
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+D:\Django New Projects\event_exhibitor\event_exhibitor\event_exhibitor\settings.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Bad Request: /badge/create/
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Bad Request: /badge/create/
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\views.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\views.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\views.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /favicon.ico
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\views.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\views.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\views.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /favicon.ico
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\tasks.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\tasks.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\tasks.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\tasks.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\tasks.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\tasks.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Django New Projects\event_exhibitor\event_exhibitor\exhibitor\tasks.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+Not Found: /favicon.ico
+D:\Django New Projects\event_exhibitor\event_exhibitor\event_exhibitor\settings.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico

@@ -44,6 +44,12 @@
             box-shadow: 0 0 1px 0 #888;
             background-size: 5652px 15px;
         }
+        .phone-input-wrapper .iti {
+    width: 100%;
+}
+.phone-input-wrapper .iti__tel-input {
+    width: 100%;
+}
 
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
             .iti__flag {

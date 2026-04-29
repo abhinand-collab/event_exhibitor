@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     
     <!-- Intl Tel Input CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.1.0/build/css/intlTelInput.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     
     <!-- Custom CSS -->
@@ -44,7 +44,7 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     
     <!-- Intl Tel Input JS -->
-    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.1.0/build/js/intlTelInput.min.js"></script>
 
     {% block scripts %}{% endblock %}
 
@@ -73,15 +73,18 @@
                 // Initialize intl-tel-input (styling only)
                 var input = document.querySelector("#mobileNumber");
                 if (input && !input.dataset.itiInitialized) {
-                    window.intlTelInput(input, {
+                    var iti = window.intlTelInput(input, {
                         initialCountry: "ae",
                         preferredCountries: ["ae", "sa", "kw", "qa", "bh", "om", "in", "pk", "gb", "us"],
                         separateDialCode: true,
                         formatOnDisplay: true,
                         autoPlaceholder: "aggressive",
-                        loadUtilsOnInit: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js"
+                        utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@23.1.0/build/js/utils.js",
+                        // loadUtilsOnInit: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js"
+                        geoIpLookup: null,
                     });
                     input.dataset.itiInitialized = true;
+                    input.itiInstance = iti;
                 }
             });
 

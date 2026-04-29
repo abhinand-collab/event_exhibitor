@@ -22,6 +22,9 @@ from celery.result import AsyncResult
 from django.http import HttpResponse
 import openpyxl
 import re
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 
 # =============================================================================
@@ -151,6 +154,43 @@ def _friendly_db_error(error_str):
     return "Something went wrong. Please try again or contact support."
 
 
+def send_badge_confirmation_email(attendee, ticket_type: str) -> None:
+    """
+    Send a styled confirmation email to the attendee after badge creation.
+    Silently swallows send errors so they never break the main request.
+    """
+    context = {
+        "first_name"  : attendee.first_name,
+        "last_name"   : attendee.last_name,
+        "email"       : attendee.email,
+        "company_name": attendee.company_name,
+        "job_title"   : attendee.job_title,
+        "country"     : attendee.country_of_residence,
+        "ticket_type" : ticket_type,
+        "event_name"  : attendee.event.name,  # adjust if your field name differs
+    }
+
+    html_body  = render_to_string("emails/badge_confirmation.html", context)
+    plain_body = strip_tags(html_body)
+    subject    = f"Badge Confirmed – {attendee.event.name}"
+
+    msg = EmailMultiAlternatives(
+        subject      = subject,
+        body         = plain_body,
+        from_email   = None,          # uses DEFAULT_FROM_EMAIL from settings
+        to           = [attendee.email],
+    )
+    msg.attach_alternative(html_body, "text/html")
+
+    try:
+        msg.send()
+    except Exception as exc:
+        # Log the failure but never let an email error break badge creation
+        import logging
+        logging.getLogger(__name__).error(
+            "Badge confirmation email failed for %s: %s", attendee.email, exc
+        )
+import threading
 @login_required
 @require_http_methods(["POST"])
 def create_single_badge(request):
@@ -221,6 +261,11 @@ def create_single_badge(request):
             {"success": False, "errors": _friendly_db_error(str(e))},
             status=500,
         )
+    threading.Thread(
+        target=send_badge_confirmation_email,
+        args=(attendee, ticket_type),
+        daemon=True,          # dies with the process — no orphaned threads
+    ).start()
 
     return JsonResponse(
         {"success": True, "message": "Badge registered successfully."},
@@ -427,6 +472,8 @@ def bulk_upload_save(request):
  
     # 🚀 Fire Celery task — rows are already valid, no status filtering needed
     task = bulk_upload_save_task.delay(rows, exhibitor.id)
+
+    print(task.id,'----------checktaskid')
  
     return JsonResponse({
         "success" : True,

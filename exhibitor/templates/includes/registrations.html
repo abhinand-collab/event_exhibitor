@@ -79,12 +79,15 @@
                     <th style="width: 40px;"><input type="checkbox" class="table-checkbox" id="selectAll"></th>
                     <th>NAME</th>
                     <th>JOB TITLE</th>
+                    <th>COUNTRY</th>
+                    <th>NATIONALITY</th>
+                    <th>PHONE NO</th>
                     <th>SOURCE</th>
                     <th>TICKET CLASS</th>
-                    <th>TICKET ID</th>
+                    <!-- <th>TICKET ID</th> -->
                     <th>COMPANY NAME</th>
-                    <th>DIGITAL BADGE ISSUE</th>
-                    <th>ONSITE BADGE PRINTED</th>
+                    <!-- <th>DIGITAL BADGE ISSUE</th>
+                    <th>ONSITE BADGE PRINTED</th> -->
                     <th>STATUS</th>
                     <th>ACTION</th>
                 </tr>
@@ -100,12 +103,15 @@
                         </div>
                     </td>
                     <td>{{ reg.job_title }}</td>
+                    <td>{{ reg.country_of_residence }}</td>
+                    <td>{{ reg.nationality }}</td>
+                    <td>{{ reg.mobile_number }}</td>
                     <td>{{ reg.source }}</td>
                     <td>{% if reg.badge %}{{ reg.badge.badge_type }}{% else %}-{% endif %}</td>
-                    <td style="max-width:180px; word-break: break-word;">{% if reg.badge %}{{ reg.badge.ticket_id }}{% else %}-{% endif %}</td>
+                    <!-- <td style="max-width:180px; word-break: break-word;">{% if reg.badge %}{{ reg.badge.ticket_id }}{% else %}-{% endif %}</td> -->
                     <td>{{ reg.company_name }}</td>
-                    <td>{% if reg.digital_badge_issued %}<span class="label-yes">Yes</span>{% else %}<span class="label-no">No</span>{% endif %}</td>
-                    <td>{% if reg.onsite_badge_printed %}<span class="label-yes">Yes</span>{% else %}<span class="label-no">No</span>{% endif %}</td>
+                    <!-- <td>{% if reg.digital_badge_issued %}<span class="label-yes">Yes</span>{% else %}<span class="label-no">No</span>{% endif %}</td>
+                    <td>{% if reg.onsite_badge_printed %}<span class="label-yes">Yes</span>{% else %}<span class="label-no">No</span>{% endif %}</td> -->
                     <td><span class="status-badge {{ reg.status|lower }}">{{ reg.get_status_display }}</span></td>
                     <td>
                         <div class="action-buttons">

@@ -132,7 +132,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
 
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
@@ -161,4 +161,3 @@ LOGGING = {
         "level": "INFO",
     },
 }
-CELERY_TASK_ALWAYS_EAGER = True
