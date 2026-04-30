@@ -34,29 +34,12 @@
             display: block;
         }
 
-        /* Fix flag images - load from CDN */
-        .iti__flag {
-            background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/img/flags.png") !important;
-            background-repeat: no-repeat;
-            background-position: 0 0;
-            width: 20px;
-            height: 15px;
-            box-shadow: 0 0 1px 0 #888;
-            background-size: 5652px 15px;
-        }
         .phone-input-wrapper .iti {
     width: 100%;
 }
 .phone-input-wrapper .iti__tel-input {
     width: 100%;
 }
-
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            .iti__flag {
-                background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/img/flags@2x.png") !important;
-                background-size: 5652px 15px;
-            }
-        }
 
         .iti__flag-container {
             padding: 0;
@@ -137,13 +120,12 @@
 
         .iti input,
         .iti input.form-control {
-            padding-left: 95px !important;
             width: 100% !important;
             height: 42px;
         }
 
         .iti--allow-dropdown input {
-            padding-left: 95px !important;
+            width: 100% !important;
         }
 
         /* Arrow styling */
@@ -190,7 +172,6 @@
 
         .modal #mobileNumber {
             height: 42px;
-            padding-left: 95px !important;
         }
 
         /* Select2 Modal Styling - Fixed Alignment */

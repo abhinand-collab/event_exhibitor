@@ -25,7 +25,9 @@ import re
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-
+from django.contrib.contenttypes.models import ContentType
+from auditlog.models import LogEntry
+from itertools import chain
 
 # =============================================================================
 # AUTH
@@ -966,4 +968,66 @@ def register_attendee(request, token):
     return render(request, "invite_registration.html", {
         "attendee": attendee,
         "errors"  : errors,
+    })
+
+def attendee_audit_logs(request, attendee_id):
+    attendee = get_object_or_404(Attendee, id=attendee_id)
+
+    attendee_ct = ContentType.objects.get_for_model(Attendee)
+    badge_ct = ContentType.objects.get_for_model(Badge)
+
+    attendee_logs = LogEntry.objects.filter(
+        content_type=attendee_ct,
+        object_id=str(attendee.id)
+    ).select_related("actor")
+
+    badge_logs = LogEntry.objects.none()
+    if hasattr(attendee, 'badge'):
+        badge_logs = LogEntry.objects.filter(
+            content_type=badge_ct,
+            object_id=str(attendee.badge.id)
+        ).select_related("actor")
+
+    # Build lookup maps
+    event_map = {str(e.id): e.name for e in Event.objects.all()}
+    exhibitor_map = {str(ex.id): ex.company_name for ex in Exhibitor.objects.all()}
+
+    FK_RESOLVERS = {
+        "event":    lambda v: event_map.get(str(v), v),
+        "exhibitor": lambda v: exhibitor_map.get(str(v), v),
+    }
+
+    def resolve_changes(changes):
+        if not changes:
+            return {}
+        resolved = {}
+        for field, vals in changes.items():
+            resolver = FK_RESOLVERS.get(field)
+            if isinstance(vals, list):
+                resolved_vals = []
+                for v in vals:
+                    if v is None or v == "None":
+                        resolved_vals.append(None)  # keep as None, handle in template
+                    elif resolver:
+                        resolved_vals.append(resolver(str(v)))
+                    else:
+                        resolved_vals.append(v)
+                resolved[field] = resolved_vals
+            else:
+                resolved[field] = vals
+        return resolved
+
+    all_logs = sorted(
+        chain(attendee_logs, badge_logs),
+        key=lambda x: x.timestamp,
+        reverse=True
+    )
+
+    # Attach resolved changes to each log as a new attribute
+    for log in all_logs:
+        log.resolved_changes = resolve_changes(log.changes)
+
+    return render(request, "attendee.html", {
+        "attendee": attendee,
+        "logs": all_logs,
     })

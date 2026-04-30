@@ -97,10 +97,10 @@
                 <tr data-attendee-id="{{ reg.id }}">
                     <td><input type="checkbox" class="table-checkbox row-checkbox"></td>
                     <td>
-                        <div class="user-info">
+                        <a href="{% url 'attendee_audit_logs' reg.id %}" class="user-info" style="text-decoration:none;" >
                             <span class="name">{{ reg.first_name }} {{ reg.last_name }}</span>
                             <span class="email">{{ reg.email }}</span>
-                        </div>
+                        </a>
                     </td>
                     <td>{{ reg.job_title }}</td>
                     <td>{{ reg.country_of_residence }}</td>

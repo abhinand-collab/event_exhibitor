@@ -680,19 +680,33 @@
     }
 
     // ── mobile_number ──────────────────────────────────────────
-    if (data.mobile_error) {
-        errors.push(data.mobile_error);
-    }
+    if (data.mobile_number) {
+  // Strip whitespace/dashes for basic length check
+  const digits = String(data.mobile_number).replace(/[\s\-().+]/g, '');
+  if (digits.length < 5 || digits.length > 15) {
+    errors.push("Invalid mobile number");
+  }
+} 
 
     // ── country ───────────────────────────────────────────────
     if (!country) {
-      errors.push("Country required");
-    }
+  errors.push("Country required");
+} else {
+  const validCountry = COUNTRIES.some(
+    c => c.name.toLowerCase() === country.toLowerCase()
+  );
+  if (!validCountry) errors.push("Country required");
+}
 
-    // ── nationality ───────────────────────────────────────────
-    if (!nationality) {
-      errors.push("Nationality required");
-    }
+// ── nationality ───────────────────────────────────────────────
+if (!nationality) {
+  errors.push("Nationality required");
+} else {
+  const validNationality = COUNTRIES.some(
+    c => c.nationality.toLowerCase() === nationality.toLowerCase()
+  );
+  if (!validNationality) errors.push("Nationality required");
+}
 
     // ── ticket_type ───────────────────────────────────────────
     if (!ticket_type) {
@@ -810,7 +824,7 @@
   //   • Show preview modal — zero server calls
   // ═════════════════════════════════════════════════════════════
 
-  document.getElementById("confirmMappingBtn").addEventListener("click", () => {
+  document.getElementById("confirmMappingBtn").addEventListener("click", async () => {
     // Collect mapping
     pagination.savedMapping = {};
     document.querySelectorAll(".fm-select").forEach(sel => {
@@ -819,7 +833,8 @@
 
     // Reset pagination state
     pagination.currentPage = 1;
-    pagination.pageSize = parseInt(document.getElementById("pageSizeSelect").value);
+    const pageSizeSel = document.getElementById("pageSizeSelect");
+    pagination.pageSize = pageSizeSel ? parseInt(pageSizeSel.value) : 50;
     pagination.activeTab = "all";
     document.querySelectorAll(".bulk-preview-tab").forEach(b => b.classList.remove("active"));
     document.querySelector('[data-bptab="all"]').classList.add("active");
@@ -832,6 +847,33 @@
       const errors = validateRowData(r, r.id);
       return { ...r, status: errors.length === 0 ? "valid" : "invalid", errors };
     });
+
+    // Global Mobile Validation Pass (Headless)
+    // Create a temporary instance to validate all rows for accurate tab counts
+    const tempInput = document.createElement("input");
+    const iti = intlTelInput(tempInput, {
+      utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@23.1.0/build/js/utils.js',
+    });
+    
+    // Ensure utils are loaded for accurate validation if supported
+    if (window.intlTelInput && typeof window.intlTelInput.loadUtils === 'function') {
+      try {
+        await window.intlTelInput.loadUtils('https://cdn.jsdelivr.net/npm/intl-tel-input@23.1.0/build/js/utils.js');
+      } catch(e) { console.warn("ITI utils load failed", e); }
+    }
+
+    allRows.forEach(r => {
+      if (r.mobile_number) {
+        iti.setNumber(String(r.mobile_number));
+        if (!iti.isValidNumber()) {
+          if (!r.errors.includes("Invalid mobile number")) {
+            r.errors.push("Invalid mobile number");
+            r.status = "invalid";
+          }
+        }
+      }
+    });
+    iti.destroy();
 
     renderCurrentView();
     new bootstrap.Modal(document.getElementById("bulkPreviewModal")).show();
@@ -1222,11 +1264,12 @@
 
       <td class="bpt-td" style="min-width:200px;">
   <div class="mobile-number-container" style="display:flex;align-items:center;">
-    <input class="bpt-input mobile-number-input"
+    <input class="bpt-input mobile-number-input ${cls('Invalid mobile number')}"
            data-row-id="${r.id}"
            value="${escapeHtml(r.mobile_number || '')}"
            style="width:100%;min-width:150px;">
   </div>
+  ${err('Invalid mobile number')}
 </td>
 
       <td class="bpt-td">
@@ -1305,6 +1348,19 @@
     } 
     input.itiInstance = iti;
 
+    // Trigger validation immediately after init
+    const rowId = parseInt(input.dataset.rowId);
+    const idx = allRows.findIndex(r => r.id === rowId);
+    if (idx !== -1 && initialValue !== "") {
+      if (!iti.isValidNumber()) {
+        if (!allRows[idx].errors.includes("Invalid mobile number")) {
+          allRows[idx].errors.push("Invalid mobile number");
+          allRows[idx].status = "invalid";
+          updateRowUI($(input).closest('tr')[0], allRows[idx]);
+        }
+      }
+    }
+
     const syncMobile = debounce(function () {
       const rowId = parseInt(input.dataset.rowId);
       const idx = allRows.findIndex(r => r.id === rowId);
@@ -1318,6 +1374,11 @@
     input.addEventListener('input', syncMobile);
     input.addEventListener('blur', syncMobile);
   });
+
+  // Refresh tab counts after processing visible rows
+  const validCount = allRows.filter(r => r.status === "valid").length;
+  const invalidCount = allRows.filter(r => r.status === "invalid").length;
+  updateTabCounts(validCount, invalidCount, allRows.length);
 }
 
   // ═════════════════════════════════════════════════════════════
@@ -1398,16 +1459,20 @@ document.addEventListener("click", e => {
 
   // Mobile validation — run if user actually typed something
   if (mobileInput && mobileInput.itiInstance) {
-    const rawValue = mobileInput.value.trim();
-    if (rawValue !== "") {
-        const iti = mobileInput.itiInstance;
-        console.log(iti.isValidNumber(),'checkiti')
-        // Check validity only after library initialization
-        if (!iti.isValidNumber()) {
-            errors.push("Invalid mobile number");
-        }
+  const rawValue = mobileInput.value.trim();
+  if (rawValue !== "") {
+    const iti = mobileInput.itiInstance;
+    if (!iti.isValidNumber()) {
+      // Remove the generic parse-time error if present, add the ITI one
+      const idx2 = errors.indexOf("Invalid mobile number");
+      if (idx2 === -1) errors.push("Invalid mobile number");
+    } else {
+      // ITI says valid — remove any parse-time false positive
+      const idx2 = errors.indexOf("Invalid mobile number");
+      if (idx2 !== -1) errors.splice(idx2, 1);
     }
   }
+}
 
   const status = errors.length === 0 ? "valid" : "invalid";
   Object.assign(allRows[idx], updated, { errors, status });

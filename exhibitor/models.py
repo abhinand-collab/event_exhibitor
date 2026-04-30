@@ -1,6 +1,7 @@
 from django.db import models
 import uuid
 from django.contrib.auth.models import AbstractUser
+from auditlog.registry import auditlog
 
 # Create your models here.
 
@@ -11,10 +12,11 @@ class User(AbstractUser):
         EXHIBITOR = "EXHIBITOR", "Exhibitor"
 
     user_type = models.CharField(max_length=20, choices=UserType.choices)
+auditlog.register(User)
 
 # ---------------------------
 # 1. Event
-# ---------------------------
+# ---------------------------   
 class Event(models.Model):
     name = models.CharField(max_length=255)
     start_date = models.DateField()
@@ -23,6 +25,7 @@ class Event(models.Model):
 
     def __str__(self):
         return self.name
+auditlog.register(Event)
     
 
 # ---------------------------
@@ -43,6 +46,7 @@ class Exhibitor(models.Model):
 
     def __str__(self):
         return self.company_name    
+auditlog.register(Exhibitor)
     
 # ---------------------------
 # 3. Attendee (Base Model)
@@ -67,7 +71,7 @@ class Attendee(models.Model):
         blank=True,
         related_name="attendees"
     )
-
+    
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100,blank=True,null=True)
     email = models.EmailField(unique=True)
@@ -94,6 +98,7 @@ class Attendee(models.Model):
             full_name += f" {self.last_name}"
 
         return f"{full_name} ({self.attendee_type})"
+auditlog.register(Attendee)
 
 
 # ---------------------------
@@ -116,3 +121,5 @@ class Badge(models.Model):
 
     def __str__(self):
         return f"{self.attendee} - {self.badge_type}"
+    
+auditlog.register(Badge)
